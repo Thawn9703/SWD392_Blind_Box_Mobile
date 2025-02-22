@@ -2,7 +2,6 @@ import React from 'react';
 import { View, Text, TouchableOpacity, ImageBackground, StyleSheet, Dimensions } from 'react-native';
 import { BlurView } from 'expo-blur'; // Import BlurView từ expo-blur
 
-import bgImage from './assets/background.jpg'; // Import Background Image
 
 const { height } = Dimensions.get('window');
 
@@ -10,9 +9,9 @@ const HomeScreen = () => {
   return (
     <View style={styles.container}>
       {/* Background Image with Blur Effect */}
-      <ImageBackground source={bgImage} style={styles.backgroundImage}>
+      {/* <ImageBackground source={bgImage} style={styles.backgroundImage}>
         <BlurView intensity={20} style={styles.blurOverlay} />
-      </ImageBackground>
+      </ImageBackground> */}
 
       {/* Nội dung */}
       <View style={styles.content}>
