@@ -1,24 +1,20 @@
-import React from 'react'
-import { StyleSheet } from 'react-native'
+import React from 'react';
 import { createStackNavigator } from '@react-navigation/stack';
-import { ROUTES } from '..';
-import AntDesign from '@expo/vector-icons/AntDesign';
-import HomeScreen from '../../screens/Homepage/HomePage';
+import { ROUTES } from '../../routes'; // Kiểm tra lại đường dẫn import
+import HomeScreen from '../../screens/HomeScreen/HomeScreen';
+import LoginScreen from '../../screens/LoginScreen/LoginScreen';
+import SignUpScreen from '../../screens/SignUpScreen/SignUpScreen';
 
 const Stack = createStackNavigator();
 
-const StackNavigation = () => {
+const StackNavigation: React.FC = () => {
     return (
-        <Stack.Navigator>
-            <Stack.Screen
-                name={ROUTES.HOME_PAGE}
-                component={HomeScreen}
-                options={{ headerShown: false }}
-            />
+        <Stack.Navigator screenOptions={{ headerShown: false }}>
+            <Stack.Screen name={ROUTES.HOME_PAGE} component={HomeScreen} />
+            <Stack.Screen name={ROUTES.LOGIN} component={LoginScreen} />
+            <Stack.Screen name={ROUTES.SIGN_UP} component={SignUpScreen} />
         </Stack.Navigator>
-    )
-}
+    );
+};
 
-export default StackNavigation
-
-const styles = StyleSheet.create({})
+export default StackNavigation;
