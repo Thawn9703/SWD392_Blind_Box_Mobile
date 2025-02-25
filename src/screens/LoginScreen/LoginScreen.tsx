@@ -55,7 +55,7 @@ const LoginScreen = () => {
 
       {/* Nhập email */}
       <TextInput
-        placeholder="Email"
+        placeholder="Example@gmail.com"
         style={styles.input}
         value={email}
         onChangeText={(text) => setEmail(text)}
@@ -81,9 +81,10 @@ const LoginScreen = () => {
         </TouchableOpacity>
       </View>
 
-      <TouchableOpacity>
-        <Text style={styles.forgotPassword}>Forgot Password?</Text>
+      <TouchableOpacity onPress={() => navigation.navigate(ROUTES.FORGOT_PASSWORD as never)}>
+      <Text style={styles.forgotPassword}>Forgot Password?</Text>
       </TouchableOpacity>
+
 
       {/* Nút đăng nhập (chỉ bấm được khi nhập đúng email & password) */}
       <TouchableOpacity

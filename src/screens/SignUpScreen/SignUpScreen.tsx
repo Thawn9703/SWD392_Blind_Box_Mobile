@@ -66,17 +66,17 @@ const SignUpScreen = () => {
         {/* Nhập thông tin cá nhân */}
         <TextInput placeholder="First Name" style={styles.input} value={firstName} onChangeText={setFirstName} />
         <TextInput placeholder="Last Name" style={styles.input} value={lastName} onChangeText={setLastName} />
-        <TextInput placeholder="Email" style={styles.input} value={email} onChangeText={setEmail} keyboardType="email-address" />
+        <TextInput placeholder="Example@gmail.com" style={styles.input} value={email} onChangeText={setEmail} keyboardType="email-address" />
         <TextInput placeholder="Mobile Number" style={styles.input} value={mobile} onChangeText={setMobile} keyboardType="phone-pad" />
 
         {/* Giới tính và Ngày sinh */}
         <View style={styles.row}>
           <View style={styles.pickerContainer}>
             <Picker selectedValue={gender} style={styles.picker} onValueChange={(itemValue) => setGender(itemValue)}>
-              <Picker.Item label="Select Gender" value="" />
+              <Picker.Item label="Gender" value="" />
               <Picker.Item label="Male" value="male" />
               <Picker.Item label="Female" value="female" />
-              <Picker.Item label="Other" value="other" />
+              {/* <Picker.Item label="Other" value="other" /> */}
             </Picker>
           </View>
 

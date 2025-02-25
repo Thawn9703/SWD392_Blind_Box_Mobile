@@ -4,6 +4,7 @@ import { ROUTES } from '../../routes'; // Kiểm tra lại đường dẫn impor
 import HomeScreen from '../../screens/HomeScreen/HomeScreen';
 import LoginScreen from '../../screens/LoginScreen/LoginScreen';
 import SignUpScreen from '../../screens/SignUpScreen/SignUpScreen';
+import ForgotPasswordScreen from '../../screens/ForgotPasswordScreen/ForgotPasswordScreen';
 
 const Stack = createStackNavigator();
 
@@ -13,6 +14,7 @@ const StackNavigation: React.FC = () => {
             <Stack.Screen name={ROUTES.HOME_PAGE} component={HomeScreen} />
             <Stack.Screen name={ROUTES.LOGIN} component={LoginScreen} />
             <Stack.Screen name={ROUTES.SIGN_UP} component={SignUpScreen} />
+            <Stack.Screen name={ROUTES.FORGOT_PASSWORD} component={ForgotPasswordScreen} />
         </Stack.Navigator>
     );
 };
