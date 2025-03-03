@@ -28,7 +28,7 @@ const LoginScreen = () => {
       {/* Nút quay lại */}
       <TouchableOpacity
         style={styles.backButton}
-        onPress={() => navigation.navigate(ROUTES.HOME_PAGE as never)}
+        onPress={() => navigation.navigate(ROUTES.HOME_PAGE_SCREEN)}
       >
         <AntDesign name="arrowleft" size={24} color="black" />
       </TouchableOpacity>
@@ -81,7 +81,7 @@ const LoginScreen = () => {
         </TouchableOpacity>
       </View>
 
-      <TouchableOpacity onPress={() => navigation.navigate(ROUTES.FORGOT_PASSWORD as never)}>
+      <TouchableOpacity onPress={() => navigation.navigate(ROUTES.FORGOT_PASSWORD)}>
       <Text style={styles.forgotPassword}>Forgot Password?</Text>
       </TouchableOpacity>
 

@@ -7,5 +7,6 @@ export enum ROUTES {
     CATEGORIES_SCREEN = "CategoriesScreen",
     PROFILE_SCREEN = "ProfileScreen",
     NEW_ARRIVALS_SCREEN = "NewArrivalsScreen",
+    ME_SCREEN = "MeScreen",
   }
   

@@ -6,6 +6,7 @@ import { NavigationContainer } from '@react-navigation/native';
 import NewArrivalsScreen from "../NewArrivalsScreen/NewArrivalsScreen";
 import CategoriesScreen from "../ProfileScreen/ProfileScreen";
 import ProfileScreen from "../CategoriesScreen/CategoriesScreen";
+import MeStackNavigator from '../MeScreen/MeStackNavigator';
 
 
 const Tab = createBottomTabNavigator();
@@ -16,7 +17,7 @@ const PopMartApp = () => {
         <Tab.Screen name="Home" component={HomeScreen} />
         <Tab.Screen name="New" component={NewArrivalsScreen} />
         <Tab.Screen name="Categories" component={CategoriesScreen} />
-        <Tab.Screen name="Profile" component={ProfileScreen} />
+        <Tab.Screen name="Me" component={MeStackNavigator} />
       </Tab.Navigator>
     );
   };

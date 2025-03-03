@@ -9,6 +9,8 @@ import HomePageScreen from '../../screens/HomePageScreen/HomePageScreen';
 import NewArrivalsScreen from '../../screens/NewArrivalsScreen/NewArrivalsScreen';
 import CategoriesScreen from '../../screens/CategoriesScreen/CategoriesScreen';
 import ProfileScreen from '../../screens/ProfileScreen/ProfileScreen';
+import MeScreen from '../../screens/MeScreen/MeScreen';
+import MeStackNavigator from '../../screens/MeScreen/MeStackNavigator';
 
 const Stack = createStackNavigator();
 
@@ -22,7 +24,8 @@ const StackNavigation: React.FC = () => {
             <Stack.Screen name={ROUTES.HOME_PAGE_SCREEN} component={HomePageScreen} />
             <Stack.Screen name={ROUTES.NEW_ARRIVALS_SCREEN } component={NewArrivalsScreen} />
             <Stack.Screen name={ROUTES.CATEGORIES_SCREEN} component={CategoriesScreen} />
-            <Stack.Screen name={ROUTES.PROFILE_SCREEN} component={ProfileScreen} />
+            <Stack.Screen name={ROUTES.ME_SCREEN} component={MeStackNavigator} />
+            {/* <Stack.Screen name={ROUTES.PROFILE_SCREEN} component={ProfileScreen} /> */}
         </Stack.Navigator>
     );
 };
