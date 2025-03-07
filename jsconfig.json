@@ -1,0 +1,13 @@
+{
+  "compilerOptions": {
+    "baseUrl": "src",
+    "paths": {
+      "@presentation/*": ["presentation/*"],
+      "@domain/*": ["domain/*"],
+      "@data/*": ["data/*"],
+      "@utils/*": ["utils/*"]
+    },
+    "jsx": "react"
+  },
+  "exclude": ["node_modules"]
+}

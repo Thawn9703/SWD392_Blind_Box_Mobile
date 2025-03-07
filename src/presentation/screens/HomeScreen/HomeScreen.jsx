@@ -1,11 +1,11 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, ImageBackground, StyleSheet } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
-import { ROUTES } from '../../routes'; // Kiểm tra lại đường dẫn import
+import { ROUTES } from "@presentation/navigation/routes.tsx";// Kiểm tra lại đường dẫn import
 import { BlurView } from 'expo-blur';
 import bgImage from '../../../assets/background.png';
 
-const HomeScreen: React.FC = () => {
+const HomeScreen = () => {
   const navigation = useNavigation();
 
   return (
@@ -21,13 +21,13 @@ const HomeScreen: React.FC = () => {
       <View style={styles.buttonContainer}>
         <TouchableOpacity 
           style={styles.loginButton} 
-          onPress={() => navigation.navigate(ROUTES.LOGIN as never)}>  
+          onPress={() => navigation.navigate(ROUTES.LOGIN)}>  
           <Text style={styles.loginText}>Login</Text>
         </TouchableOpacity>
 
         <TouchableOpacity 
           style={styles.signUpButton} 
-          onPress={() => navigation.navigate(ROUTES.SIGN_UP as never)}>  
+          onPress={() => navigation.navigate(ROUTES.SIGN_UP)}>  
           <Text style={styles.signUpText}>Sign up</Text>
         </TouchableOpacity>
       </View>

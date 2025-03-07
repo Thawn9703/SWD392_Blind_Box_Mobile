@@ -8,7 +8,7 @@ import {
 } from "react-native";
 import { FontAwesome, AntDesign } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
-import { ROUTES } from "../../routes";
+  import { ROUTES } from "@presentation/navigate/routes";
 
 const LoginScreen = () => {
   const navigation = useNavigation(); // Lấy object điều hướng

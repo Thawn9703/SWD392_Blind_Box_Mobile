@@ -11,7 +11,7 @@ import { FontAwesome, AntDesign } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
 import { Picker } from "@react-native-picker/picker";
 import DateTimePicker from "@react-native-community/datetimepicker";
-import { ROUTES } from "../../routes";
+import { ROUTES } from "@presentation/navigation/routes.tsx";
 
 const SignUpScreen = () => {
   const navigation = useNavigation();

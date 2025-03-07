@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet, Image, TouchableOpacity } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
-import { ROUTES } from "../../presentation/navigation/routes";
+import { ROUTES } from "@presentation/navigation/routes";
 
 const MyProfileScreen = () => {
   const navigation = useNavigation();

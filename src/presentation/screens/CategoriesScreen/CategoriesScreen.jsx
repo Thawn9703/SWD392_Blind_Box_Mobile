@@ -10,7 +10,7 @@ import {
 } from "react-native";
 import { AntDesign } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
-import { ROUTES } from "../../routes";
+import { ROUTES } from "@presentation/navigation/routes";
 
 const ProfileScreen = () => {
   const navigation = useNavigation();
@@ -28,7 +28,7 @@ const ProfileScreen = () => {
   const [isEditing, setIsEditing] = useState(false);
 
   // Xử lý thay đổi thông tin
-  const handleChange = (key: keyof typeof user, value: string) => {
+  const handleChange = (key, value) => {
     setEditedUser((prev) => ({ ...prev, [key]: value }));
     setIsEditing(true);
   };
@@ -47,7 +47,7 @@ const ProfileScreen = () => {
       {
         text: "Logout",
         style: "destructive",
-        onPress: () => navigation.navigate(ROUTES.LOGIN as never),
+        onPress: () => navigation.navigate(ROUTES.LOGIN),
       },
     ]);
   };
@@ -77,7 +77,11 @@ const ProfileScreen = () => {
 
       {/* Email (không chỉnh sửa) */}
       <Text style={styles.label}>Email</Text>
-      <TextInput style={[styles.input, styles.disabledInput]} value={user.email} editable={false} />
+      <TextInput
+        style={[styles.input, styles.disabledInput]}
+        value={user.email}
+        editable={false}
+      />
 
       {/* Số điện thoại */}
       <Text style={styles.label}>Phone Number</Text>
@@ -90,7 +94,10 @@ const ProfileScreen = () => {
 
       {/* Nút Lưu */}
       <TouchableOpacity
-        style={[styles.saveButton, { backgroundColor: isEditing ? "#007AFF" : "gray" }]}
+        style={[
+          styles.saveButton,
+          { backgroundColor: isEditing ? "#007AFF" : "gray" },
+        ]}
         disabled={!isEditing}
         onPress={handleSave}
       >

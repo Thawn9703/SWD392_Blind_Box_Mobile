@@ -4,10 +4,10 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { NavigationContainer } from '@react-navigation/native';
 import { Ionicons, MaterialCommunityIcons } from 'react-native-vector-icons';
 
-import NewArrivalsScreen from "../NewArrivalsScreen/NewArrivalsScreen";
-import CategoriesScreen from "../ProfileScreen/ProfileScreen";
-import ProfileScreen from "../CategoriesScreen/CategoriesScreen";
-import MeStackNavigator from '../MeScreen/MeStackNavigator';
+import NewArrivalsScreen from "@presentation/screens/NewArrivalsScreen/NewArrivalsScreen";
+import CategoriesScreen from "@presentation/screens/CategoriesScreen/CategoriesScreen";
+import ProfileScreen from "@presentation/screens/ProfileScreen/ProfileScreen";
+import MeStackNavigator from '@presentation/screens/MeScreen/MeStackNavigator';
 
 
 const Tab = createBottomTabNavigator();

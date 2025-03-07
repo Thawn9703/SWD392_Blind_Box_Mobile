@@ -1,4 +1,16 @@
 {
-  "compilerOptions": {},
-  "extends": "expo/tsconfig.base"
+  "compilerOptions": {
+    "baseUrl": "./src",
+    "paths": {
+      "@/*": ["*"],
+      "@presentation/*": ["presentation/*"],
+      "@domain/*": ["domain/*"],
+      "@data/*": ["data/*"]
+    },
+    "strict": true,
+    "forceConsistentCasingInFileNames": true,
+    "typeRoots": ["./src/types", "./node_modules/@types"]
+  },
+  "extends": "expo/tsconfig.base",
+  "include": ["src/**/*.ts", "src/**/*.tsx", "src/**/*.d.ts", "src/presentation/screens/HomeScreen/HomeScreen.jsx", "src/presentation/screens/SignUpScreen/SignUpScreen.jsx", "src/presentation/screens/CategoriesScreen/CategoriesScreen.jsx"]
 }

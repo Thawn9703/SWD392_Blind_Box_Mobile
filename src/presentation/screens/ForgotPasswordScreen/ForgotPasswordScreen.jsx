@@ -9,7 +9,7 @@ import {
 } from "react-native";
 import { AntDesign } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
-import { ROUTES } from "../../routes";
+import { ROUTES } from "@presentation/navigation/routes";
 
 const ForgotPasswordScreen = () => {
   const navigation = useNavigation();

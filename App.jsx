@@ -3,8 +3,8 @@ import { StyleSheet } from "react-native";
 import { Provider } from "react-redux";
 import { NavigationContainer } from "@react-navigation/native";
 
-import store from "./src/redux/store"; 
-import StackNavigation from "./src/routes/navigate/stack.navigation";
+import store from "./src/domain/store/redux/store"; 
+import StackNavigation from "@presentation/navigation/navigate/stack.navigation.jsx";
 
 export default function App() {
   return (

@@ -1,8 +1,8 @@
 import React from 'react';
 import { createStackNavigator } from '@react-navigation/stack';
 import MeScreen from './MeScreen';
-import ProfileScreen from './../ProfileScreen/ProfileScreen';
-import { ROUTES } from "../../routes";
+import ProfileScreen from '../ProfileScreen/ProfileScreen';
+import { ROUTES } from "@presentation/navigation/routes";
 
 const MeStack = createStackNavigator();
 

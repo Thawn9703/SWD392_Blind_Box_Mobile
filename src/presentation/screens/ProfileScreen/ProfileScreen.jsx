@@ -10,51 +10,46 @@ import {
 } from "react-native";
 import { AntDesign } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
-import { ROUTES } from "../../routes";
+import { ROUTES } from "@presentation/navigation/routes.tsx";
+import PropTypes from 'prop-types';
 
 const ProfileScreen = () => {
   const navigation = useNavigation();
 
-  // Dữ liệu mẫu của user
   const [user, setUser] = useState({
-    avatar: "https://via.placeholder.com/100", // Avatar mặc định
+    avatar: "https://via.placeholder.com/100",
     name: "John Doe",
     email: "johndoe@gmail.com",
     phone: "123-456-7890",
   });
 
-  // State để theo dõi thay đổi
   const [editedUser, setEditedUser] = useState({ ...user });
   const [isEditing, setIsEditing] = useState(false);
 
-  // Xử lý thay đổi thông tin
-  const handleChange = (key: keyof typeof user, value: string) => {
+  const handleChange = (key, value) => {
     setEditedUser((prev) => ({ ...prev, [key]: value }));
     setIsEditing(true);
   };
 
-  // Lưu thông tin cập nhật
   const handleSave = () => {
     setUser(editedUser);
     setIsEditing(false);
     Alert.alert("Profile Updated", "Your profile has been successfully updated.");
   };
 
-  // Đăng xuất
   const handleLogout = () => {
     Alert.alert("Logout", "Are you sure you want to log out?", [
       { text: "Cancel", style: "cancel" },
       {
         text: "Logout",
         style: "destructive",
-        onPress: () => navigation.navigate(ROUTES.LOGIN as never),
+        onPress: () => navigation.navigate(ROUTES.LOGIN)
       },
     ]);
   };
 
   return (
     <View style={styles.container}>
-      {/* Nút quay lại */}
       <TouchableOpacity
         style={styles.backButton}
         onPress={() => navigation.goBack()}
@@ -64,10 +59,8 @@ const ProfileScreen = () => {
 
       <Text style={styles.title}>My Profile</Text>
 
-      {/* Ảnh đại diện */}
       <Image source={{ uri: user.avatar }} style={styles.avatar} />
 
-      {/* Tên */}
       <Text style={styles.label}>Full Name</Text>
       <TextInput
         style={styles.input}
@@ -75,11 +68,13 @@ const ProfileScreen = () => {
         onChangeText={(text) => handleChange("name", text)}
       />
 
-      {/* Email (không chỉnh sửa) */}
       <Text style={styles.label}>Email</Text>
-      <TextInput style={[styles.input, styles.disabledInput]} value={user.email} editable={false} />
+      <TextInput 
+        style={[styles.input, styles.disabledInput]} 
+        value={user.email} 
+        editable={false} 
+      />
 
-      {/* Số điện thoại */}
       <Text style={styles.label}>Phone Number</Text>
       <TextInput
         style={styles.input}
@@ -88,7 +83,6 @@ const ProfileScreen = () => {
         keyboardType="phone-pad"
       />
 
-      {/* Nút Lưu */}
       <TouchableOpacity
         style={[styles.saveButton, { backgroundColor: isEditing ? "#007AFF" : "gray" }]}
         disabled={!isEditing}
@@ -97,12 +91,15 @@ const ProfileScreen = () => {
         <Text style={styles.saveText}>Save Changes</Text>
       </TouchableOpacity>
 
-      {/* Nút Đăng xuất */}
       <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
         <Text style={styles.logoutText}>Log Out</Text>
       </TouchableOpacity>
     </View>
   );
+};
+
+ProfileScreen.propTypes = {
+  navigation: PropTypes.object
 };
 
 export default ProfileScreen;
