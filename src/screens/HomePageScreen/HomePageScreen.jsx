@@ -2,6 +2,7 @@ import React from 'react';
 import { View, Text, TextInput, TouchableOpacity, ScrollView, Image, StyleSheet } from 'react-native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { NavigationContainer } from '@react-navigation/native';
+import { Ionicons, MaterialCommunityIcons } from 'react-native-vector-icons';
 
 import NewArrivalsScreen from "../NewArrivalsScreen/NewArrivalsScreen";
 import CategoriesScreen from "../ProfileScreen/ProfileScreen";
@@ -13,11 +14,51 @@ const Tab = createBottomTabNavigator();
 
 const PopMartApp = () => {
     return (
-      <Tab.Navigator screenOptions={{ headerShown: false }}>
-        <Tab.Screen name="Home" component={HomeScreen} />
-        <Tab.Screen name="New" component={NewArrivalsScreen} />
-        <Tab.Screen name="Categories" component={CategoriesScreen} />
-        <Tab.Screen name="Me" component={MeStackNavigator} />
+      <Tab.Navigator screenOptions={{ headerShown: false, style: styles.tabBarStyle }}>
+        <Tab.Screen name="Home" component={HomeScreen} options={{
+          tabBarIcon: ({ focused, color }) => (
+            <Ionicons 
+              name={focused ? 'home' : 'home-outline'} 
+              size={24} 
+              color={color}
+            />
+          ),
+          tabBarActiveTintColor: '#d32f2f',
+          tabBarInactiveTintColor: '#757575',
+        }}/>
+        <Tab.Screen name="New" component={NewArrivalsScreen} options={{
+          tabBarIcon: ({ focused, color }) => (
+            <MaterialCommunityIcons 
+              name={focused ? 'star' : 'star-outline'} 
+              size={24} 
+              color={color}
+            />
+          ),
+          tabBarActiveTintColor: '#d32f2f',
+          tabBarInactiveTintColor: '#757575',
+        }}/>
+        <Tab.Screen name="Categories" component={CategoriesScreen} options={{
+          tabBarIcon: ({ focused, color }) => (
+            <Ionicons 
+              name={focused ? 'grid' : 'grid-outline'} 
+              size={24} 
+              color={color}
+            />
+          ),
+          tabBarActiveTintColor: '#d32f2f',
+          tabBarInactiveTintColor: '#757575',
+        }}/>
+        <Tab.Screen name="Me" component={MeStackNavigator} options={{
+          tabBarIcon: ({ focused, color }) => (
+            <Ionicons 
+              name={focused ? 'person' : 'person-outline'} 
+              size={24} 
+              color={color}
+            />
+          ),
+          tabBarActiveTintColor: '#d32f2f',
+          tabBarInactiveTintColor: '#757575',
+        }}/>
       </Tab.Navigator>
     );
   };
@@ -79,6 +120,13 @@ const styles = StyleSheet.create({
     width: 100,
     height: 100,
     borderRadius: 10,
+  },
+  tabBarStyle: {
+    backgroundColor: '#ffffff',
+    borderTopWidth: 1,
+    borderTopColor: '#e5e5e5',
+    paddingBottom: 5,
+    paddingTop: 5,
   },
 });
 
