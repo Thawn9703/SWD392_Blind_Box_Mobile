@@ -4,15 +4,15 @@ import { createStackNavigator } from '@react-navigation/stack';
 import { ROUTES } from "@presentation/navigation/routes";
 
 // Import các screens
-//import HomeScreen from '@presentation/screens/HomeScreen/HomeScreen';
+// import HomeScreen from '@presentation/screens/HomeScreen/HomeScreen';
 // import LoginScreen from '@presentation/screens/LoginScreen/LoginScreen';
 // import SignUpScreen from '@presentation/screens/SignUpScreen/SignUpScreen';
 // import ForgotPasswordScreen from '@presentation/screens/ForgotPasswordScreen/ForgotPasswordScreen';
 import HomePageScreen from '@presentation/screens/HomePageScreen/HomePageScreen';
 import NewArrivalsScreen from '@presentation/screens/NewArrivalsScreen/NewArrivalsScreen';
 import CategoriesScreen from '@presentation/screens/CategoriesScreen/CategoriesScreen';
-// import ProfileScreen from '@presentation/screens/ProfileScreen/ProfileScreen';
-// import MeScreen from '@presentation/screens/MeScreen/MeScreen';
+import ProfileScreen from '@presentation/screens/ProfileScreen/ProfileScreen';
+import MeScreen from '@presentation/screens/MeScreen/MeScreen';
 import MeStackNavigator from '@presentation/screens/MeScreen/MeStackNavigator';
 
 const Stack = createStackNavigator();
@@ -40,7 +40,7 @@ const StackNavigation = () => {
                 name={ROUTES.ME_SCREEN} 
                 component={MeStackNavigator} 
             />
-            {/* <Stack.Screen name={ROUTES.PROFILE_SCREEN} component={ProfileScreen} /> */}
+            <Stack.Screen name={ROUTES.PROFILE_SCREEN} component={ProfileScreen} />
         </Stack.Navigator>
     );
 };

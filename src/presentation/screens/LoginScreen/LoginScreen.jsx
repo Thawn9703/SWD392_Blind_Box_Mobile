@@ -8,8 +8,7 @@ import {
 } from "react-native";
 import { FontAwesome, AntDesign } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
-  import { ROUTES } from "@presentation/navigate/routes";
-
+import { ROUTES } from "@presentation/navigation/routes";
 const LoginScreen = () => {
   const navigation = useNavigation(); // Lấy object điều hướng
 
@@ -28,7 +27,7 @@ const LoginScreen = () => {
       {/* Nút quay lại */}
       <TouchableOpacity
         style={styles.backButton}
-        onPress={() => navigation.navigate(ROUTES.HOME_PAGE_SCREEN)}
+        onPress={() => navigation.navigate(ROUTES.HOME_SCREEN)}
       >
         <AntDesign name="arrowleft" size={24} color="black" />
       </TouchableOpacity>

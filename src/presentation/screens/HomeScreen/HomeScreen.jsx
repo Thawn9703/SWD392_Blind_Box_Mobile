@@ -3,7 +3,7 @@ import { View, Text, TouchableOpacity, ImageBackground, StyleSheet } from 'react
 import { useNavigation } from '@react-navigation/native';
 import { ROUTES } from "@presentation/navigation/routes.tsx";// Kiểm tra lại đường dẫn import
 import { BlurView } from 'expo-blur';
-import bgImage from '../../../assets/background.png';
+import bgImage from '../../../../assets/background.png';
 
 const HomeScreen = () => {
   const navigation = useNavigation();
