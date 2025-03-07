@@ -4,15 +4,15 @@ import { createStackNavigator } from '@react-navigation/stack';
 import { ROUTES } from "@presentation/navigation/routes";
 
 // Import các screens
-//import HomeScreen from '../screens/HomeScreen/HomeScreen';
-// import LoginScreen from '../screens/LoginScreen/LoginScreen';
-// import SignUpScreen from '../screens/SignUpScreen/SignUpScreen';
-// import ForgotPasswordScreen from '../screens/ForgotPasswordScreen/ForgotPasswordScreen';
+//import HomeScreen from '@presentation/screens/HomeScreen/HomeScreen';
+// import LoginScreen from '@presentation/screens/LoginScreen/LoginScreen';
+// import SignUpScreen from '@presentation/screens/SignUpScreen/SignUpScreen';
+// import ForgotPasswordScreen from '@presentation/screens/ForgotPasswordScreen/ForgotPasswordScreen';
 import HomePageScreen from '@presentation/screens/HomePageScreen/HomePageScreen';
 import NewArrivalsScreen from '@presentation/screens/NewArrivalsScreen/NewArrivalsScreen';
 import CategoriesScreen from '@presentation/screens/CategoriesScreen/CategoriesScreen';
-// import ProfileScreen from '../screens/ProfileScreen/ProfileScreen';
-// import MeScreen from '../screens/MeScreen/MeScreen';
+// import ProfileScreen from '@presentation/screens/ProfileScreen/ProfileScreen';
+// import MeScreen from '@presentation/screens/MeScreen/MeScreen';
 import MeStackNavigator from '@presentation/screens/MeScreen/MeStackNavigator';
 
 const Stack = createStackNavigator();
