@@ -1,7 +1,13 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, ImageBackground, StyleSheet } from 'react-native';
+import { 
+  View, 
+  Text, 
+  TouchableOpacity, 
+  ImageBackground, 
+  StyleSheet 
+} from 'react-native';
 import { useNavigation } from '@react-navigation/native';
-import { ROUTES } from "@presentation/navigation/routes.tsx";// Kiểm tra lại đường dẫn import
+import { ROUTES } from '@presentation/navigation/routes'; // Kiểm tra lại đường dẫn import
 import { BlurView } from 'expo-blur';
 import bgImage from '../../../../assets/background.png';
 
@@ -20,14 +26,16 @@ const HomeScreen = () => {
 
       <View style={styles.buttonContainer}>
         <TouchableOpacity 
-          style={styles.loginButton} 
-          onPress={() => navigation.navigate(ROUTES.LOGIN)}>  
+          style={styles.loginButton}
+          onPress={() => navigation.navigate(ROUTES.LOGIN)}
+        >
           <Text style={styles.loginText}>Login</Text>
         </TouchableOpacity>
 
         <TouchableOpacity 
-          style={styles.signUpButton} 
-          onPress={() => navigation.navigate(ROUTES.SIGN_UP)}>  
+          style={styles.signUpButton}
+          onPress={() => navigation.navigate(ROUTES.SIGN_UP)}
+        >
           <Text style={styles.signUpText}>Sign up</Text>
         </TouchableOpacity>
       </View>
@@ -52,7 +60,7 @@ const styles = StyleSheet.create({
   },
   blurOverlay: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(0,0,0,0.3)',
+    backgroundColor: 'rgba(0, 0, 0, 0.3)',
   },
   content: {
     flex: 1,
@@ -64,7 +72,7 @@ const styles = StyleSheet.create({
     fontSize: 28,
     color: 'white',
     fontWeight: 'bold',
-    textShadowColor: 'rgba(195, 195, 195, 0.8)', 
+    textShadowColor: 'rgba(195, 195, 195, 0.8)',
     textShadowOffset: { width: 2, height: 2 },
     textShadowRadius: 8,
   },

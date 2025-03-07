@@ -10,7 +10,7 @@ import {
 } from "react-native";
 import { AntDesign } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
-import { ROUTES } from "@presentation/navigation/routes.tsx";
+import { ROUTES } from "@presentation/navigation/routes";
 import PropTypes from 'prop-types';
 
 const NewArrivalsScreen = () => {
@@ -69,9 +69,9 @@ const NewArrivalsScreen = () => {
   );
 };
 
-NewArrivalsScreen.propTypes = {
-  navigation: PropTypes.object
-};
+// NewArrivalsScreen.propTypes = {
+//   navigation: PropTypes.object
+// };
 
 export default NewArrivalsScreen;
 

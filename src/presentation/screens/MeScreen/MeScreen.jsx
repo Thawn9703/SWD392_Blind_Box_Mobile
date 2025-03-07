@@ -3,7 +3,7 @@ import { View, Text, StyleSheet, Image, TouchableOpacity } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { ROUTES } from "@presentation/navigation/routes";
 
-const MyProfileScreen = () => {
+const MeScreen = () => {
   const navigation = useNavigation();
 
   // Hàm điều hướng dựa theo tên màn hình
@@ -50,43 +50,62 @@ const MyProfileScreen = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: '#f2f2f2', // Màu nền mềm mại, không quá chói
     padding: 20,
-    backgroundColor: '#fff',
   },
   profileHeader: {
     alignItems: 'center',
     marginBottom: 30,
+    padding: 20,
+    backgroundColor: '#fff',
+    borderRadius: 10,
+    // Thêm shadow tạo hiệu ứng nổi bật cho card
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
   },
   avatar: {
     width: 100,
     height: 100,
     borderRadius: 50,
+    borderWidth: 3,
+    borderColor: '#d32f2f', // Đường viền nổi bật
   },
   username: {
     marginTop: 10,
-    fontSize: 20,
+    fontSize: 22,
     fontWeight: 'bold',
+    color: '#333',
   },
   sectionContainer: {
     marginBottom: 20,
-    padding: 15,
-    borderWidth: 1,
-    borderColor: '#ccc',
-    borderRadius: 8,
+    backgroundColor: '#fff',
+    padding: 20,
+    borderRadius: 10,
+    // Shadow cho card
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
   },
   sectionTitle: {
     fontSize: 18,
     fontWeight: '600',
-    marginBottom: 10,
+    marginBottom: 15,
+    color: '#d32f2f',
   },
   item: {
-    paddingVertical: 10,
+    paddingVertical: 15,
     borderBottomWidth: 1,
-    borderBottomColor: '#eee',
+    borderBottomColor: '#f0f0f0',
   },
   itemText: {
     fontSize: 16,
+    color: '#333',
   },
 });
 
-export default MyProfileScreen;
+export default MeScreen;

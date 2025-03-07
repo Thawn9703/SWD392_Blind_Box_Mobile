@@ -8,5 +8,6 @@ export enum ROUTES {
     PROFILE_SCREEN = "ProfileScreen",
     NEW_ARRIVALS_SCREEN = "NewArrivalsScreen",
     ME_SCREEN = "MeScreen",
+    PRODUCT_DETAIL_SCREEN = "ProductDetailScreen",
   }
   
