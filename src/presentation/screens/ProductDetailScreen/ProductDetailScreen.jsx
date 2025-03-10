@@ -1,12 +1,5 @@
 import React, { useState } from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  TouchableOpacity,
-  ScrollView,
-  Image,
-} from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
 import { useRoute, useNavigation } from '@react-navigation/native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 
@@ -15,13 +8,25 @@ const ProductDetailScreen = () => {
   const navigation = useNavigation();
   const { product } = route.params || {};
 
-  // Biến lưu số lượng mua
+  // Số lượng mua
   const [quantity, setQuantity] = useState(1);
+  // Trạng thái hiển thị thông báo add to cart
+  const [showNotification, setShowNotification] = useState(false);
 
   // Hàm tăng giảm số lượng
   const handleIncrement = () => setQuantity(quantity + 1);
   const handleDecrement = () => {
     if (quantity > 1) setQuantity(quantity - 1);
+  };
+
+  // Hàm xử lý thêm vào giỏ hàng
+  const handleAddToCart = () => {
+    // Thực hiện thêm sản phẩm vào giỏ hàng (có thể cập nhật vào state, context, hoặc Redux)
+    setShowNotification(true);
+    setTimeout(() => {
+      setShowNotification(false);
+      // Không chuyển hướng sang màn hình AddToCart
+    }, 2000);
   };
 
   return (
@@ -40,9 +45,7 @@ const ProductDetailScreen = () => {
           <Text style={styles.subTitle}>
             {product?.campaign || 'MILESTONE CAMPAIGN'}
           </Text>
-          <Text style={styles.endTime}>
-            Ends in: 5 days, 12 hours
-          </Text>
+          <Text style={styles.endTime}>Ends in: 5 days, 12 hours</Text>
         </View>
 
         {/* Giá sản phẩm */}
@@ -99,11 +102,18 @@ const ProductDetailScreen = () => {
           <Text style={styles.infoText}>• Series contains: 6 figures + 1 secret chase</Text>
         </View>
 
-        {/* Nút hành động (Add to Cart / Pre-order / etc.) */}
-        <TouchableOpacity style={styles.addButton}>
+        {/* Nút thêm vào giỏ hàng */}
+        <TouchableOpacity style={styles.addButton} onPress={handleAddToCart}>
           <Text style={styles.addButtonText}>ADD TO CART</Text>
         </TouchableOpacity>
       </ScrollView>
+
+      {/* Thông báo khi thêm vào giỏ hàng thành công */}
+      {showNotification && (
+        <View style={styles.notification}>
+          <Text style={styles.notificationText}>Added to cart successfully!</Text>
+        </View>
+      )}
     </View>
   );
 };
@@ -118,13 +128,12 @@ const styles = StyleSheet.create({
   },
   backButton: {
     position: 'absolute',
-    top: 40, // Điều chỉnh theo safe area của thiết bị
+    top: 40,
     left: 15,
     zIndex: 10,
     backgroundColor: '#fff',
     borderRadius: 20,
     padding: 5,
-    // Thêm hiệu ứng shadow nhẹ cho nút back
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.2,
@@ -257,5 +266,19 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
     color: '#fff',
+  },
+  notification: {
+    position: 'absolute',
+    bottom: 20,
+    left: '20%',
+    right: '20%',
+    backgroundColor: '#4CAF50',
+    padding: 10,
+    borderRadius: 8,
+    alignItems: 'center',
+  },
+  notificationText: {
+    color: '#fff',
+    fontSize: 14,
   },
 });

@@ -2,7 +2,7 @@ import React from 'react';
 import { View, Text, TextInput, TouchableOpacity, ScrollView, Image, StyleSheet } from 'react-native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { NavigationContainer } from '@react-navigation/native';
-import { Ionicons, MaterialCommunityIcons } from 'react-native-vector-icons';
+import { Ionicons, MaterialCommunityIcons, FontAwesome5 } from 'react-native-vector-icons';
 import { useNavigation } from '@react-navigation/native';
 
 import NewArrivalsScreen from "@presentation/screens/NewArrivalsScreen/NewArrivalsScreen";
@@ -10,7 +10,7 @@ import CategoriesScreen from "@presentation/screens/CategoriesScreen/CategoriesS
 import ProfileScreen from "@presentation/screens/ProfileScreen/ProfileScreen";
 import MeStackNavigator from '@presentation/screens/MeScreen/MeStackNavigator';
 import ProductDetailScreen from '@presentation/screens/ProductDetailScreen/ProductDetailScreen';
-
+import AddToCartScreen from '@presentation/screens/AddToCartScreen/AddToCartScreen';
 
 const Tab = createBottomTabNavigator();
 
@@ -52,12 +52,25 @@ const PopMartApp = () => {
       />
       <Tab.Screen
         name="Categories"
-        component={CategoriesScreen}
+        component={AddToCartScreen}
         options={{
           tabBarIcon: ({ focused, color }) => (
             <Ionicons
               name={focused ? 'grid' : 'grid-outline'}
               size={24}
+              color={color}
+            />
+          ),
+        }}
+      />
+      <Tab.Screen 
+        name="Cart" // Thêm màn hình Cart
+        component={AddToCartScreen} 
+        options={{
+          tabBarIcon: ({ focused, color }) => (
+            <FontAwesome5
+              name={focused ? 'shopping-cart' : 'shopping-cart'} 
+              size={22} 
               color={color}
             />
           ),
