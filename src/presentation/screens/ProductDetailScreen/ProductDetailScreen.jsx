@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Image } from 'react-native';
 import { useRoute, useNavigation } from '@react-navigation/native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 
@@ -21,12 +21,17 @@ const ProductDetailScreen = () => {
 
   // Hàm xử lý thêm vào giỏ hàng
   const handleAddToCart = () => {
-    // Thực hiện thêm sản phẩm vào giỏ hàng (có thể cập nhật vào state, context, hoặc Redux)
+    // Thực hiện thêm sản phẩm vào giỏ hàng (cập nhật state, context hoặc Redux tùy ứng dụng)
     setShowNotification(true);
     setTimeout(() => {
       setShowNotification(false);
-      // Không chuyển hướng sang màn hình AddToCart
     }, 2000);
+  };
+
+  // Hàm xử lý "Buy Now"
+  const handleBuyNow = () => {
+    // Thực hiện các hành động liên quan đến mua ngay (ví dụ: chuyển sang màn hình thanh toán)
+    console.log('Buy Now clicked');
   };
 
   return (
@@ -37,8 +42,16 @@ const ProductDetailScreen = () => {
       </TouchableOpacity>
 
       <ScrollView style={styles.container}>
-        {/* Tiêu đề sản phẩm + Ảnh minh hoạ */}
-        <View style={[styles.header, { paddingTop: 50 }]}>
+        {/* Không gian chứa ảnh sản phẩm */}
+        <View style={styles.imageContainer}>
+          <Image
+            source={{ uri: product?.image || 'https://bizweb.dktcdn.net/100/329/122/files/blind-box-popmart-la-nhung-chiec-hop-kin-co-chua-nhan-vat-ngau-nhien.webp?v=1724125816533' }}
+            style={styles.productImage}
+          />
+        </View>
+
+        {/* Tiêu đề sản phẩm */}
+        <View style={[styles.header, { paddingTop: 20 }]}>
           <Text style={styles.title}>
             {product?.title || 'Dimoo Space Series - Package #8'}
           </Text>
@@ -106,6 +119,11 @@ const ProductDetailScreen = () => {
         <TouchableOpacity style={styles.addButton} onPress={handleAddToCart}>
           <Text style={styles.addButtonText}>ADD TO CART</Text>
         </TouchableOpacity>
+
+        {/* Nút mua ngay */}
+        <TouchableOpacity style={styles.buyNowButton} onPress={handleBuyNow}>
+          <Text style={styles.buyNowButtonText}>BUY NOW</Text>
+        </TouchableOpacity>
       </ScrollView>
 
       {/* Thông báo khi thêm vào giỏ hàng thành công */}
@@ -139,6 +157,16 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.2,
     shadowRadius: 2,
     elevation: 3,
+  },
+  imageContainer: {
+    width: '100%',
+    height: 200,
+    marginBottom: 15,
+  },
+  productImage: {
+    width: '100%',
+    height: '100%',
+    borderRadius: 8,
   },
   header: {
     marginBottom: 10,
@@ -260,9 +288,21 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     paddingVertical: 15,
     alignItems: 'center',
-    marginBottom: 40,
+    marginBottom: 15,
   },
   addButtonText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#fff',
+  },
+  buyNowButton: {
+    backgroundColor: '#FF9800',
+    borderRadius: 8,
+    paddingVertical: 15,
+    alignItems: 'center',
+    marginBottom: 40,
+  },
+  buyNowButtonText: {
     fontSize: 16,
     fontWeight: '600',
     color: '#fff',
