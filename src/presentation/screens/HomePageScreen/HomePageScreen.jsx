@@ -1,5 +1,5 @@
-import React from 'react';
-import { View, Text, TextInput, TouchableOpacity, ScrollView, Image, StyleSheet } from 'react-native';
+import {React, useState} from 'react';
+import { View, Text, TextInput, TouchableOpacity, ScrollView, Image, StyleSheet, isFocused } from 'react-native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { NavigationContainer } from '@react-navigation/native';
 import { Ionicons, MaterialCommunityIcons, FontAwesome5 } from 'react-native-vector-icons';
@@ -74,6 +74,7 @@ const PopMartApp = () => {
               color={color}
             />
           ),
+          tabBarBadge: 3,
         }}
       />
       <Tab.Screen
@@ -96,21 +97,32 @@ const PopMartApp = () => {
 const HomeScreen = () => {
   
   const navigation = useNavigation();
+  const [isFocused, setIsFocused] = useState(false);
+  const [searchText, setSearchText] = useState(''); 
   
   return (<ScrollView style={styles.homeContainer}>
     {/* Navbar */}
     <View style={styles.navbar}>
       <Text style={styles.title}>Blindbox®</Text>
-      <TextInput
-        style={styles.searchInput}
-        placeholder='Search...'
-        placeholderTextColor='#999'
-      />
+      <View style={styles.searchContainer}>
+        <TextInput
+          style={[
+            styles.searchInput,
+            isFocused && styles.searchInputFocused
+          ]}
+          placeholder={isFocused ? 'Blindbox packages' : 'Search...'}
+          placeholderTextColor="#999"
+          value={searchText}
+          onChangeText={setSearchText}
+          onFocus={() => setIsFocused(true)}
+          onBlur={() => setIsFocused(false)}
+        />
+      </View>
     </View>
     
     {/* Sidebar Navigation */}
     <ScrollView horizontal style={styles.navItemsWrapper} showsHorizontalScrollIndicator={false}>
-      {['SKULLPANDA', 'LABUBU', 'DIMOO', 'MOLLY'].map((item, index) => (
+      {['SKULLPANDA', 'LABUBU', 'DIMOO', 'MOLLY', 'KIMMON', 'ROLIFE'].map((item, index) => (
         <TouchableOpacity key={index} style={styles.navItem}>
           <Text style={styles.navItemText}>{item}</Text>
         </TouchableOpacity>
@@ -258,6 +270,48 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.05,
     shadowRadius: 4,
     elevation: 3,
+  },
+  searchContainer: {
+    position: 'relative',
+    flex: 1,
+    marginLeft: 10,
+  },
+  
+  searchLabel: {
+    position: 'absolute',
+    top: -20,
+    left: 5,
+    fontSize: 12,
+    color: '#d32f2f',
+    backgroundColor: '#fff',
+    paddingHorizontal: 4,
+    borderRadius: 4,
+    // Thêm shadow cho label
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 1,
+    elevation: 1,
+  },
+  
+  searchInput: {
+    borderWidth: 1,
+    borderColor: '#ddd',
+    padding: 8,
+    borderRadius: 5,
+    backgroundColor: '#fff',
+    fontSize: 14,
+    // Thêm hiệu ứng shadow nhẹ
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    elevation: 2,
+  },
+  
+  searchInputFocused: {
+    borderColor: '#d32f2f',
+    borderWidth: 2,
   },
 });
 
