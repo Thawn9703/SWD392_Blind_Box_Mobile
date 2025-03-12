@@ -17,6 +17,7 @@ import MeStackNavigator from "@presentation/screens/MeScreen/MeStackNavigator";
 import HomePageStackNavigator from "@presentation/screens/HomePageScreen/HomePageStackNavigator";
 import ProductDetailScreen from "@presentation/screens/ProductDetailScreen/ProductDetailScreen";
 import AddToCartScreen from "@presentation/screens/AddToCartScreen/AddToCartScreen";
+import PurchaseHistoryScreen from "@presentation/screens/PurchaseHistoryScreen/PurchaseHistoryScreen";
 
 const Stack = createStackNavigator();
 
@@ -42,6 +43,10 @@ const StackNavigation = () => {
       <Stack.Screen
         name={ROUTES.CATEGORIES_SCREEN}
         component={CategoriesScreen}
+      />
+       <Stack.Screen
+        name={ROUTES.PURCHASE_HISTORY_SCREEN}
+        component={PurchaseHistoryScreen}
       />
       <Stack.Screen name={ROUTES.ME_SCREEN} component={MeStackNavigator} />
 
