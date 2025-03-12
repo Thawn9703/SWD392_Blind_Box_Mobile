@@ -5,12 +5,15 @@ import { NavigationContainer } from "@react-navigation/native";
 
 import store from "./src/domain/store/redux/store"; 
 import StackNavigation from "@presentation/navigation/navigate/stack.navigation.jsx";
+import { CartProvider } from "@presentation/context/CartContext";
 
 export default function App() {
   return (
     <Provider store={store}>
       <NavigationContainer>
-        <StackNavigation />
+        <CartProvider>
+          <StackNavigation />
+        </CartProvider>
       </NavigationContainer>
     </Provider>
   );

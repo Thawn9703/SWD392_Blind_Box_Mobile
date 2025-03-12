@@ -12,10 +12,13 @@ import MeStackNavigator from '@presentation/screens/MeScreen/MeStackNavigator';
 import ProductDetailScreen from '@presentation/screens/ProductDetailScreen/ProductDetailScreen';
 import AddToCartScreen from '@presentation/screens/AddToCartScreen/AddToCartScreen';
 import PurchaseHistoryScreen from '@presentation/screens/PurchaseHistoryScreen/PurchaseHistoryScreen';
+import { useCart } from '@presentation/context/CartContext';
 
 const Tab = createBottomTabNavigator();
 
 const PopMartApp = () => {
+  const { cartItemCount } = useCart();
+
   return (
     <Tab.Navigator
       screenOptions={{
@@ -75,7 +78,7 @@ const PopMartApp = () => {
               color={color}
             />
           ),
-          tabBarBadge: 3,
+          tabBarBadge: cartItemCount > 0 ? cartItemCount : null, 
         }}
       />
       <Tab.Screen

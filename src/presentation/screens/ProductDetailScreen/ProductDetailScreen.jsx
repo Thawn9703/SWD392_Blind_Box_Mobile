@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Image } from 'react-native';
 import { useRoute, useNavigation } from '@react-navigation/native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
+import { useCart } from '@presentation/context/CartContext';
 
 const ProductDetailScreen = () => {
   const route = useRoute();
@@ -14,7 +15,7 @@ const ProductDetailScreen = () => {
   const [showNotification, setShowNotification] = useState(false);
   // Loại sản phẩm được chọn (Box / Package)
   const [selectedType, setSelectedType] = useState(null);
-
+  const { cartItems, setCartItems } = useCart();
   // Hàm tăng giảm số lượng
   const handleIncrement = () => setQuantity(quantity + 1);
   const handleDecrement = () => {
@@ -23,11 +24,22 @@ const ProductDetailScreen = () => {
 
   // Hàm xử lý thêm vào giỏ hàng
   const handleAddToCart = () => {
-    // Chỉ cho thêm vào giỏ hàng nếu đã chọn type
     if (!selectedType) {
       alert('Vui lòng chọn loại sản phẩm trước khi thêm vào giỏ hàng!');
       return;
     }
+    
+    const newItem = {
+      id: Date.now().toString(), // tạo id unique
+      title: product?.title || 'Dimoo Space Series - Package #8',
+      image: product?.image || 'https://bizweb.dktcdn.net/100/329/122/files/blind-box-popmart-la-nhung-chiec-hop-kin-co-chua-nhan-vat-ngau-nhien.webp?v=1724125816533',
+      quantity: quantity,
+      price: parseFloat(product?.price?.replace('$', '') || '85.50') * 23000, // Convert to VND
+      selected: false,
+      type: selectedType
+    };
+
+    setCartItems([...cartItems, newItem]);
     setShowNotification(true);
     setTimeout(() => {
       setShowNotification(false);
@@ -187,7 +199,7 @@ const ProductDetailScreen = () => {
 
         {/* Nút mua ngay */}
         <TouchableOpacity style={styles.buyNowButton} onPress={handleBuyNow}>
-          <Text style={styles.buyNowButtonText}>BUY NOW</Text>
+          <Text style={styles.buyNowButtonText}>PRE-ORDER NOW</Text>
         </TouchableOpacity>
       </ScrollView>
 
