@@ -12,6 +12,8 @@ const ProductDetailScreen = () => {
   const [quantity, setQuantity] = useState(1);
   // Trạng thái hiển thị thông báo add to cart
   const [showNotification, setShowNotification] = useState(false);
+  // Loại sản phẩm được chọn (Box / Package)
+  const [selectedType, setSelectedType] = useState(null);
 
   // Hàm tăng giảm số lượng
   const handleIncrement = () => setQuantity(quantity + 1);
@@ -21,7 +23,11 @@ const ProductDetailScreen = () => {
 
   // Hàm xử lý thêm vào giỏ hàng
   const handleAddToCart = () => {
-    // Thực hiện thêm sản phẩm vào giỏ hàng (cập nhật state, context hoặc Redux tùy ứng dụng)
+    // Chỉ cho thêm vào giỏ hàng nếu đã chọn type
+    if (!selectedType) {
+      alert('Vui lòng chọn loại sản phẩm trước khi thêm vào giỏ hàng!');
+      return;
+    }
     setShowNotification(true);
     setTimeout(() => {
       setShowNotification(false);
@@ -31,6 +37,10 @@ const ProductDetailScreen = () => {
   // Hàm xử lý "Buy Now"
   const handleBuyNow = () => {
     // Thực hiện các hành động liên quan đến mua ngay (ví dụ: chuyển sang màn hình thanh toán)
+    if (!selectedType) {
+      alert('Vui lòng chọn loại sản phẩm trước khi mua!');
+      return;
+    }
     console.log('Buy Now clicked');
   };
 
@@ -93,15 +103,70 @@ const ProductDetailScreen = () => {
           </Text>
         </View>
 
-        {/* Chọn số lượng */}
+        {/* Chọn loại sản phẩm (Box / Package) */}
+        <View style={styles.typeSelectionContainer}>
+          <Text style={styles.typeSelectionLabel}>Type:</Text>
+          <View style={styles.typeOptions}>
+            {/* Option Box */}
+            <TouchableOpacity
+              style={[
+                styles.typeOption,
+                selectedType === 'Box' && styles.typeOptionActive
+              ]}
+              onPress={() => setSelectedType('Box')}
+            >
+              <Text
+                style={[
+                  styles.typeOptionText,
+                  selectedType === 'Box' && styles.typeOptionTextActive
+                ]}
+              >
+                Box
+              </Text>
+            </TouchableOpacity>
+            {/* Option Package */}
+            <TouchableOpacity
+              style={[
+                styles.typeOption,
+                selectedType === 'Package' && styles.typeOptionActive
+              ]}
+              onPress={() => setSelectedType('Package')}
+            >
+              <Text
+                style={[
+                  styles.typeOptionText,
+                  selectedType === 'Package' && styles.typeOptionTextActive
+                ]}
+              >
+                Package
+              </Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+
+        {/* Chọn số lượng (chỉ cho chỉnh khi đã chọn type) */}
         <View style={styles.quantityContainer}>
           <Text style={styles.label}>Quantity:</Text>
           <View style={styles.quantityControl}>
-            <TouchableOpacity style={styles.btnQty} onPress={handleDecrement}>
+            <TouchableOpacity
+              style={[
+                styles.btnQty,
+                { opacity: selectedType ? 1 : 0.5 }
+              ]}
+              onPress={selectedType ? handleDecrement : null}
+              disabled={!selectedType}
+            >
               <Text style={styles.btnText}>-</Text>
             </TouchableOpacity>
             <Text style={styles.qtyValue}>{quantity}</Text>
-            <TouchableOpacity style={styles.btnQty} onPress={handleIncrement}>
+            <TouchableOpacity
+              style={[
+                styles.btnQty,
+                { opacity: selectedType ? 1 : 0.5 }
+              ]}
+              onPress={selectedType ? handleIncrement : null}
+              disabled={!selectedType}
+            >
               <Text style={styles.btnText}>+</Text>
             </TouchableOpacity>
           </View>
@@ -234,6 +299,47 @@ const styles = StyleSheet.create({
     marginBottom: 5,
     color: '#555',
   },
+  /* Bắt đầu phần chọn Type */
+  typeSelectionContainer: {
+    marginBottom: 15,
+    backgroundColor: '#fff',
+    padding: 10,
+    borderRadius: 8,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    elevation: 2,
+  },
+  typeSelectionLabel: {
+    fontSize: 16,
+    marginBottom: 8,
+    fontWeight: '600',
+    color: '#333',
+  },
+  typeOptions: {
+    flexDirection: 'row',
+    justifyContent: 'flex-start',
+  },
+  typeOption: {
+    backgroundColor: '#e0e0e0',
+    borderRadius: 8,
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    marginRight: 10,
+  },
+  typeOptionActive: {
+    backgroundColor: '#FF9800', // màu sáng hơn để nổi bật khi chọn
+  },
+  typeOptionText: {
+    fontSize: 14,
+    color: '#333',
+  },
+  typeOptionTextActive: {
+    color: '#fff',
+    fontWeight: '700',
+  },
+  /* Kết thúc phần chọn Type */
   quantityContainer: {
     flexDirection: 'row',
     alignItems: 'center',
