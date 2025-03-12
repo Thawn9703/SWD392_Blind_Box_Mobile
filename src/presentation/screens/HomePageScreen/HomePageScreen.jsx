@@ -11,6 +11,7 @@ import ProfileScreen from "@presentation/screens/ProfileScreen/ProfileScreen";
 import MeStackNavigator from '@presentation/screens/MeScreen/MeStackNavigator';
 import ProductDetailScreen from '@presentation/screens/ProductDetailScreen/ProductDetailScreen';
 import AddToCartScreen from '@presentation/screens/AddToCartScreen/AddToCartScreen';
+import PurchaseHistoryScreen from '@presentation/screens/PurchaseHistoryScreen/PurchaseHistoryScreen';
 
 const Tab = createBottomTabNavigator();
 
@@ -38,21 +39,21 @@ const PopMartApp = () => {
         }}
       />
       <Tab.Screen
-        name="New"
-        component={NewArrivalsScreen}
+        name="Purchase History"
+        component={PurchaseHistoryScreen}
         options={{
           tabBarIcon: ({ focused, color }) => (
             <MaterialCommunityIcons
-              name={focused ? 'star' : 'star-outline'}
-              size={24}
-              color={color}
+            name={focused ? 'receipt' : 'receipt'}  
+            size={24}
+            color={color}
             />
           ),
         }}
       />
-      <Tab.Screen
+      {/* <Tab.Screen
         name="Categories"
-        component={AddToCartScreen}
+        component={CategoriesScreen}
         options={{
           tabBarIcon: ({ focused, color }) => (
             <Ionicons
@@ -62,7 +63,7 @@ const PopMartApp = () => {
             />
           ),
         }}
-      />
+      /> */}
       <Tab.Screen 
         name="Cart" // Thêm màn hình Cart
         component={AddToCartScreen} 
