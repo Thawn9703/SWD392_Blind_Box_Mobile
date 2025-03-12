@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, FlatList, Image } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, FlatList, Image, TextInput } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 
 const AddToCartScreen = () => {
@@ -9,12 +9,21 @@ const AddToCartScreen = () => {
       id: '1',
       title: 'Dimoo Space Series - Package #8',
       image: 'https://bizweb.dktcdn.net/100/329/122/files/blind-box-popmart-la-nhung-chiec-hop-kin-co-chua-nhan-vat-ngau-nhien.webp?v=1724125816533',
-      quantity: 2,
-      price: 85.50,
+      quantity: 1,
+      price: 480000,
       selected: false,
     },
-    // Có thể thêm các mục khác nếu cần...
+    {
+      id: '2',
+      title: 'Dimoo Space Series - Package #9',
+      image: 'https://example.com/product-image.jpg', // Thêm hình ảnh cho sản phẩm
+      quantity: 1,
+      price: 1200000,
+      selected: false,
+    },
   ]);
+
+  const [voucherCode, setVoucherCode] = useState('');
 
   // Hàm xử lý toggle checkbox cho từng mục
   const toggleSelect = (id) => {
@@ -34,7 +43,8 @@ const AddToCartScreen = () => {
   const handleDecrementItem = (id) => {
     setCartItems(cartItems.map(item => {
       if (item.id === id) {
-        return { ...item, quantity: item.quantity > 1 ? item.quantity - 1 : 1 };
+        // Nếu số lượng > 1, giảm đi 1
+        return { ...item, quantity: item.quantity > 1 ? item.quantity - 1 : item.quantity };
       }
       return item;
     }));
@@ -48,20 +58,10 @@ const AddToCartScreen = () => {
     return total;
   }, 0);
 
-  // Xử lý thanh toán riêng cho từng mục
-  const handleItemCheckout = (id) => {
-    console.log('Checkout for item: ', id);
-  };
-
   // Xử lý thanh toán cho các sản phẩm được chọn
   const handleGlobalCheckout = () => {
     const selectedItems = cartItems.filter(item => item.selected);
     console.log('Global checkout for items: ', selectedItems);
-  };
-
-  // Xử lý hủy các mục đã chọn (cancel order)
-  const handleCancelOrder = () => {
-    setCartItems(cartItems.filter(item => !item.selected));
   };
 
   // Render mỗi mục sản phẩm trong giỏ hàng
@@ -96,40 +96,50 @@ const AddToCartScreen = () => {
             <Text style={styles.qtyAdjustText}>+</Text>
           </TouchableOpacity>
         </View>
-        <Text style={styles.itemPrice}>Price: ${item.price.toFixed(2)}</Text>
+        <Text style={styles.itemPrice}>Price: {item.price.toLocaleString()} VND</Text>
       </View>
-      {/* Nút checkout riêng cho mục */}
-      <TouchableOpacity style={styles.itemCheckoutButton} onPress={() => handleItemCheckout(item.id)}>
-        <Text style={styles.itemCheckoutText}>Checkout</Text>
-      </TouchableOpacity>
     </View>
   );
 
   return (
-    <View style={styles.container}>
-      <FlatList
-        data={cartItems}
-        keyExtractor={(item) => item.id}
-        renderItem={renderCartItem}
-        contentContainerStyle={styles.listContainer}
-      />
+    <>
+      <View style={styles.container}>
+        <View style={styles.headerContainer}>
+          {/* <TouchableOpacity style={styles.backButton}>
+            <Ionicons name="arrow-back" size={24} color="#fff" />
+          </TouchableOpacity> */}
+          <Text style={styles.headerText}>Shopping Cart ({cartItems.length})</Text>
+          {/* <TouchableOpacity style={styles.editButton}>
+            <Text style={styles.editText}></Text>
+          </TouchableOpacity> */}
+        </View>
 
-      {/* Khung thanh toán tổng */}
-      <View style={styles.checkoutContainer}>
-        <TouchableOpacity style={styles.globalCheckoutButton} onPress={handleGlobalCheckout}>
-          <Text style={styles.globalCheckoutText}>Checkout</Text>
-        </TouchableOpacity>
+        <FlatList
+          data={cartItems}
+          keyExtractor={(item) => item.id}
+          renderItem={renderCartItem}
+          contentContainerStyle={styles.listContainer}
+        />
 
-        <TouchableOpacity style={styles.cancelButton} onPress={handleCancelOrder}>
-          <Text style={styles.cancelButtonText}>Cancel Order</Text>
-        </TouchableOpacity>
+        <View style={styles.checkoutContainer}>
+          {/* <TextInput
+            style={styles.voucherInput}
+            placeholder="Enter Voucher Code"
+            value={voucherCode}
+            onChangeText={setVoucherCode}
+          /> */}
+          <View style={styles.totalAmountContainer}>
+            <Text style={styles.totalAmountText}>Total: {totalCheckoutAmount.toLocaleString()} VND</Text>
+          </View>
 
-        <View style={styles.totalAmountContainer}>
-          <Text style={styles.totalAmountText}>Total: ${totalCheckoutAmount.toFixed(2)}</Text>
+          <TouchableOpacity style={styles.globalCheckoutButton} onPress={handleGlobalCheckout}>
+            <Text style={styles.globalCheckoutText}>Check Out</Text>
+          </TouchableOpacity>
         </View>
       </View>
-    </View>
+    </>
   );
+
 };
 
 export default AddToCartScreen;
@@ -139,9 +149,33 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#fafafa',
   },
+  headerContainer: {
+    marginTop: 40,
+    backgroundColor: '#f44336',
+    paddingVertical: 15,
+    // flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 10,
+  },
+  backButton: {
+    padding: 10,
+  },
+  headerText: {
+    fontSize: 20,
+    fontWeight: '600',
+    color: '#fff',
+  },
+  editButton: {
+    padding: 10,
+  },
+  editText: {
+    fontSize: 16,
+    color: '#fff',
+  },
   listContainer: {
     padding: 15,
-    paddingBottom: 100, // Dành cho khung thanh toán
+    paddingBottom: 100,
   },
   cartItem: {
     flexDirection: 'row',
@@ -151,7 +185,6 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     marginBottom: 10,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.1,
     shadowRadius: 2,
     elevation: 2,
@@ -209,58 +242,42 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     marginTop: 4,
   },
-  itemCheckoutButton: {
-    backgroundColor: '#D32F2F',
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-    borderRadius: 8,
-  },
-  itemCheckoutText: {
-    color: '#fff',
-    fontSize: 14,
-  },
   checkoutContainer: {
     position: 'absolute',
     bottom: 0,
     left: 0,
     right: 0,
-    flexDirection: 'row',
-    alignItems: 'center',
     backgroundColor: '#fff',
-    padding: 10,
+    padding: 15,
     borderTopWidth: 1,
     borderColor: '#ddd',
+    alignItems: 'center',
+  },
+  voucherInput: {
+    width: '80%',
+    padding: 10,
+    borderRadius: 8,
+    backgroundColor: '#f5f5f5',
+    marginBottom: 10,
+  },
+  totalAmountContainer: {
+    marginBottom: 10,
+  },
+  totalAmountText: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#333',
   },
   globalCheckoutButton: {
     backgroundColor: '#D32F2F',
-    paddingVertical: 10,
+    paddingVertical: 12,
     paddingHorizontal: 20,
     borderRadius: 8,
+    marginTop: 10,
   },
   globalCheckoutText: {
     color: '#fff',
     fontSize: 16,
     fontWeight: '600',
-  },
-  cancelButton: {
-    backgroundColor: '#757575',
-    paddingVertical: 10,
-    paddingHorizontal: 15,
-    borderRadius: 8,
-    marginLeft: 10,
-  },
-  cancelButtonText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  totalAmountContainer: {
-    flex: 1,
-    alignItems: 'flex-end',
-  },
-  totalAmountText: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#333',
   },
 });
