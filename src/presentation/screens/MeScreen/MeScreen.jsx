@@ -24,7 +24,7 @@ const MeScreen = () => {
       {/* Khung 1: Manage order */}
       <View style={styles.sectionContainer}>
         <Text style={styles.sectionTitle}>Manage order</Text>
-        <TouchableOpacity style={styles.item} onPress={() => handlePress('OrderStatus')}>
+        <TouchableOpacity style={styles.item} onPress={() => navigation.navigate(ROUTES.ORDER_STATUS_SCREEN)}>
           <Text style={styles.itemText}>Order status</Text>
         </TouchableOpacity>
         <TouchableOpacity style={styles.item} onPress={() => navigation.navigate(ROUTES.PURCHASE_HISTORY_SCREEN)}>
@@ -38,7 +38,7 @@ const MeScreen = () => {
         <TouchableOpacity style={styles.item} onPress={() => navigation.navigate(ROUTES.PROFILE_SCREEN)}>
           <Text style={styles.itemText}>My Profile</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.item} onPress={() => handlePress('Logout')}>
+        <TouchableOpacity style={styles.item} onPress={() => navigation.navigate(ROUTES.HOME_SCREEN)}>
           <Text style={styles.itemText}>Logout</Text>
         </TouchableOpacity>
       </View>

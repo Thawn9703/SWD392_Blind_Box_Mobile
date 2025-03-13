@@ -18,20 +18,17 @@ import HomePageStackNavigator from "@presentation/screens/HomePageScreen/HomePag
 import ProductDetailScreen from "@presentation/screens/ProductDetailScreen/ProductDetailScreen";
 import AddToCartScreen from "@presentation/screens/AddToCartScreen/AddToCartScreen";
 import PurchaseHistoryScreen from "@presentation/screens/PurchaseHistoryScreen/PurchaseHistoryScreen";
-
+import OrderStatusScreen from "@presentation/screens/OrderStatusScreen/OrderStatusScreen";
 const Stack = createStackNavigator();
 
 const StackNavigation = () => {
   return (
     <Stack.Navigator screenOptions={{ headerShown: false }}>
       {/* <Stack.Screen name={ROUTES.HOME_SCREEN} component={HomeScreen} />
-            <Stack.Screen name={ROUTES.LOGIN} component={LoginScreen} />
-            <Stack.Screen name={ROUTES.SIGN_UP} component={SignUpScreen} />
-            <Stack.Screen name={ROUTES.FORGOT_PASSWORD} component={ForgotPasswordScreen} /> */}
-      {/* <Stack.Screen 
-                name={ROUTES.HOME_PAGE_SCREEN} 
-                component={HomePageScreen} 
-            /> */}
+          <Stack.Screen name={ROUTES.LOGIN} component={LoginScreen} />
+          <Stack.Screen name={ROUTES.SIGN_UP} component={SignUpScreen} />
+          <Stack.Screen name={ROUTES.FORGOT_PASSWORD} component={ForgotPasswordScreen} /> */}
+      {/* <Stack.Screen name={ROUTES.HOME_PAGE_SCREEN} component={HomePageScreen}   /> */}
       <Stack.Screen
         name={ROUTES.HOME_PAGE_SCREEN}
         component={HomePageStackNavigator}
@@ -47,6 +44,10 @@ const StackNavigation = () => {
        <Stack.Screen
         name={ROUTES.PURCHASE_HISTORY_SCREEN}
         component={PurchaseHistoryScreen}
+      />
+        <Stack.Screen
+        name={ROUTES.ORDER_STATUS_SCREEN}
+        component={OrderStatusScreen}
       />
       <Stack.Screen name={ROUTES.ME_SCREEN} component={MeStackNavigator} />
 
