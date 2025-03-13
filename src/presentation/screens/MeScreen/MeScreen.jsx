@@ -1,8 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet, Image, TouchableOpacity } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
-import { ROUTES } from "@presentation/navigation/routes";
-
+import { ROUTES } from "@presentation/navigation/routes"; 
 const MeScreen = () => {
   const navigation = useNavigation();
 
@@ -28,8 +27,8 @@ const MeScreen = () => {
         <TouchableOpacity style={styles.item} onPress={() => handlePress('OrderStatus')}>
           <Text style={styles.itemText}>Order status</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.item} onPress={() => handlePress('OrderHistory')}>
-          <Text style={styles.itemText}>Order history</Text>
+        <TouchableOpacity style={styles.item} onPress={() => navigation.navigate(ROUTES.PURCHASE_HISTORY_SCREEN)}>
+          <Text style={styles.itemText}>Purchase history</Text>
         </TouchableOpacity>
       </View>
 
