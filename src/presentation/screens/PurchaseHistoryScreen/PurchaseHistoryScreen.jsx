@@ -1,27 +1,29 @@
 import React, { useState } from 'react';
-import { View, Text, FlatList, StyleSheet, TouchableOpacity, Modal, Button } from 'react-native';
+import { View, Text, FlatList, StyleSheet, TouchableOpacity, Modal } from 'react-native';
+import { Ionicons } from '@expo/vector-icons'; // Thêm icon mũi tên
+import { useNavigation } from '@react-navigation/native'; // Thêm hook để sử dụng navigation
 
 // Sample data for Pop Mart blind box orders
 const orders = [
   {
     id: '1',
-    boxType: 'Molly Series', // Loại hộp Pop Mart (ví dụ: Molly Series)
-    productCategory: 'Vinyl Figures', // Danh mục sản phẩm (vinyl figures)
-    price: 350000, // Giá của hộp blind box
-    purchaseDate: '2025-03-01', // Ngày mua
-    deliveryStatus: 'Pending', // Trạng thái giao hàng
-    trackingNumber: 'TN1234567890', // Mã vận chuyển
-    revealedItem: 'Molly the Bunny', // Sản phẩm đã mở từ hộp
+    boxType: 'Molly Series',
+    productCategory: 'Vinyl Figures',
+    price: 350000,
+    purchaseDate: '2025-03-01',
+    deliveryStatus: 'Shipped',
+    trackingNumber: 'TN1234567890',
+    revealedItem: 'Molly the Bunny',
   },
   {
     id: '2',
-    boxType: 'Pucky Series', // Loại hộp Pop Mart
+    boxType: 'Pucky Series',
     productCategory: 'Vinyl Figures',
     price: 450000,
     purchaseDate: '2025-03-05',
-    deliveryStatus: 'Shipped',
+    deliveryStatus: 'Cancelled',
     trackingNumber: 'TN9876543210',
-    revealedItem: 'Pucky the Monster', // Sản phẩm đã mở từ hộp
+    revealedItem: 'Pucky the Monster',
   },
   {
     id: '3',
@@ -31,7 +33,7 @@ const orders = [
     purchaseDate: '2025-03-10',
     deliveryStatus: 'Shipped',
     trackingNumber: 'TN1122334455',
-    revealedItem: 'The Monster Series - Zombie Edition', // Sản phẩm đã mở từ hộp
+    revealedItem: 'The Monster Series - Zombie Edition',
   },
 ];
 
@@ -52,6 +54,7 @@ const OrderItem = ({ item, onViewDetails }) => (
 export default function App() {
   const [modalVisible, setModalVisible] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState(null);
+  const navigation = useNavigation(); // Sử dụng hook navigation
 
   const handleViewDetails = (order) => {
     setSelectedOrder(order);
@@ -63,9 +66,19 @@ export default function App() {
     setSelectedOrder(null);
   };
 
+  const handleGoBack = () => {
+    navigation.goBack('MeScreen'); // Quay lại
+  };
+
   return (
     <View style={styles.container}>
-      <Text style={styles.header}>Purchase History</Text>
+      <View style={styles.headerContainer}>
+        <TouchableOpacity onPress={handleGoBack} style={styles.backButton}>
+          <Ionicons name="arrow-back" size={24} color="#333" />
+        </TouchableOpacity>
+        <Text style={styles.header}>Purchase History</Text>
+      </View>
+
       <FlatList
         data={orders}
         renderItem={({ item }) => <OrderItem item={item} onViewDetails={handleViewDetails} />}
@@ -109,13 +122,23 @@ const styles = StyleSheet.create({
     backgroundColor: '#f4f4f9',
     padding: 15,
   },
+  headerContainer: {
+    flexDirection: 'row',  // Căn chỉnh nút back và tiêu đề theo chiều ngang
+    alignItems: 'center',  // Căn giữa các phần tử theo chiều dọc
+    marginBottom: 20,
+  },
   header: {
     fontSize: 28,
     fontWeight: '700',
-    color: '#333',
+    color: '#e74c3c', // Màu chủ đạo là đỏ
     textAlign: 'center',
-    margin: 40,
+    marginLeft: 10,
     textTransform: 'uppercase',
+    flex: 1, // Đảm bảo tiêu đề chiếm không gian còn lại
+    marginTop: 20,
+  },
+  backButton: {
+    padding: 10,
   },
   orderItem: {
     backgroundColor: '#ffffff',
@@ -192,7 +215,7 @@ const styles = StyleSheet.create({
     fontSize: 24,
     fontWeight: '700',
     marginBottom: 15,
-    color: '#2c3e50',
+    color: '#e74c3c', // Màu chủ đạo là đỏ
   },
   modalText: {
     fontSize: 16,

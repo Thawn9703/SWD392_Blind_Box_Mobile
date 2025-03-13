@@ -41,7 +41,7 @@ const PopMartApp = () => {
           ),
         }}
       />
-      <Tab.Screen
+      {/* <Tab.Screen
         name="Purchase History"
         component={PurchaseHistoryScreen}
         options={{
@@ -53,7 +53,7 @@ const PopMartApp = () => {
             />
           ),
         }}
-      />
+      /> */}
       {/* <Tab.Screen
         name="Categories"
         component={CategoriesScreen}
