@@ -11,5 +11,6 @@ export enum ROUTES {
     PRODUCT_DETAIL_SCREEN = "ProductDetailScreen",
     ADD_TO_CART_SCREEN = "AddToCartScreen",
     PURCHASE_HISTORY_SCREEN = "PurchaseHistoryScreen",
+    ORDER_STATUS_SCREEN = "OrderStatusScreen",
   }
   
