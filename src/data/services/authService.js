@@ -10,19 +10,21 @@ const authService = {
         password
       });
       
-      // Lưu token vào bộ nhớ an toàn cho các yêu cầu tiếp theo
-      if (response.data.metadata.accessToken) {
-        // Lưu token, dữ liệu người dùng, v.v.
-        return response.data;
-      }
-      
       return response.data;
     } catch (error) {
       throw error.response ? error.response.data : new Error('Đăng nhập thất bại');
     }
   },
   
-  // Thêm bộ chặn yêu cầu để bao gồm token trong các yêu cầu tương lai
+  register: async (registerData) => {
+    try {
+      const response = await axios.post(`${API_BASE_URL}/api/v1/users/signup`, registerData);
+      return response.data;
+    } catch (error) {
+      throw error.response ? error.response.data : new Error('Đăng ký thất bại');
+    }
+  },
+  
   setupAuthInterceptor: (token) => {
     axios.interceptors.request.use(
       (config) => {

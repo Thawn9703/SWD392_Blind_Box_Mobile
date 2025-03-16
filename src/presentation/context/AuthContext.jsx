@@ -1,6 +1,7 @@
 import React, { createContext, useState, useContext, useEffect } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import authService from '../../data/services/authService';
+import authFacade from '@domain/facades/authFacade';
+import authService from '@data/services/authService';
 
 const AuthContext = createContext();
 
@@ -35,7 +36,7 @@ export const AuthProvider = ({ children }) => {
       setLoading(true);
       setError(null);
       
-      const response = await authService.login(email, password);
+      const response = await authFacade.login(email, password);
       
       if (response.status) {
         const userData = response.metadata;
@@ -60,13 +61,36 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  const logout = async () => {
+  const register = async (registerData) => {
     try {
-      setUser(null);
-      await AsyncStorage.removeItem('user');
-      await AsyncStorage.removeItem('token');
+      setLoading(true);
+      setError(null);
+      
+      const response = await authFacade.register(registerData);
+      
+      if (response.status) {
+        // Nếu cần đăng nhập ngay sau khi đăng ký
+        if (response.metadata?.accessToken) {
+          const userData = response.metadata;
+          setUser(userData);
+          
+          // Lưu dữ liệu xác thực
+          await AsyncStorage.setItem('user', JSON.stringify(userData));
+          await AsyncStorage.setItem('token', userData.accessToken);
+          
+          // Thiết lập interceptor cho các yêu cầu tương lai
+          authService.setupAuthInterceptor(userData.accessToken);
+        }
+        
+        return { success: true, data: response.metadata };
+      } else {
+        throw new Error(response.message || 'Đăng ký thất bại');
+      }
     } catch (error) {
-      console.error('Đăng xuất thất bại', error);
+      setError(error.message || 'Đăng ký thất bại');
+      return { success: false, error: error.message };
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -77,7 +101,7 @@ export const AuthProvider = ({ children }) => {
         loading,
         error,
         login,
-        logout,
+        register,
         isAuthenticated: !!user,
       }}
     >

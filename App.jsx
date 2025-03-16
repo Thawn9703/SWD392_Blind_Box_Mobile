@@ -5,6 +5,8 @@ import { CartProvider } from '@presentation/context/CartContext';
 import PopMartApp from '@presentation/screens/HomePageScreen/HomePageScreen';
 import LoginScreen from '@presentation/screens/LoginScreen/LoginScreen';
 import { createStackNavigator } from '@react-navigation/stack';
+import SignUpScreen from '@presentation/screens/SignUpScreen/SignUpScreen';
+import { ROUTES } from '@presentation/navigation/routes';
 
 const Stack = createStackNavigator();
 
@@ -14,7 +16,8 @@ const App = () => {
       <AuthProvider>
         <CartProvider>
           <Stack.Navigator screenOptions={{ headerShown: false }}>
-            <Stack.Screen name="Login" component={LoginScreen} />
+            <Stack.Screen name={ROUTES.LOGIN} component={LoginScreen} />
+            <Stack.Screen name={ROUTES.SIGN_UP} component={SignUpScreen} />
             <Stack.Screen name="Main" component={PopMartApp} />
           </Stack.Navigator>
         </CartProvider>

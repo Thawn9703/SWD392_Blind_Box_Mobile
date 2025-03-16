@@ -6,7 +6,7 @@ import { ROUTES } from "@presentation/navigation/routes";
 // Import các screens
 // import HomeScreen from '@presentation/screens/HomeScreen/HomeScreen';
 import LoginScreen from '@presentation/screens/LoginScreen/LoginScreen';
-// import SignUpScreen from '@presentation/screens/SignUpScreen/SignUpScreen';
+import SignUpScreen from '@presentation/screens/SignUpScreen/SignUpScreen';
 // import ForgotPasswordScreen from '@presentation/screens/ForgotPasswordScreen/ForgotPasswordScreen';
 import HomePageScreen from "@presentation/screens/HomePageScreen/HomePageScreen";
 import NewArrivalsScreen from "@presentation/screens/NewArrivalsScreen/NewArrivalsScreen";
@@ -29,8 +29,8 @@ const StackNavigation = () => {
     <Stack.Navigator screenOptions={{ headerShown: false }}>
       {/* <Stack.Screen name={ROUTES.HOME_SCREEN} component={HomeScreen} /> */}
           <Stack.Screen name={ROUTES.LOGIN} component={LoginScreen} />
-          {/* <Stack.Screen name={ROUTES.SIGN_UP} component={SignUpScreen} />
-          <Stack.Screen name={ROUTES.FORGOT_PASSWORD} component={ForgotPasswordScreen} /> */}
+          <Stack.Screen name={ROUTES.SIGN_UP} component={SignUpScreen} />
+          {/* <Stack.Screen name={ROUTES.FORGOT_PASSWORD} component={ForgotPasswordScreen} /> */}
       {/* <Stack.Screen name={ROUTES.HOME_PAGE_SCREEN} component={HomePageScreen}   /> */}
       <Stack.Screen
         name={ROUTES.HOME_PAGE_SCREEN}

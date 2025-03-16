@@ -14,6 +14,7 @@ import {
 } from 'react-native';
 import { Ionicons } from 'react-native-vector-icons';
 import { useAuth } from '@presentation/context/AuthContext';
+import { ROUTES } from "@presentation/navigation/routes"; 
 
 const LoginScreen = ({ navigation }) => {
   const [email, setEmail] = useState('');
@@ -141,7 +142,7 @@ const LoginScreen = ({ navigation }) => {
 
           <View style={styles.signupContainer}>
             <Text style={styles.signupText}>Chưa có tài khoản? </Text>
-            <TouchableOpacity onPress={() => navigation.navigate('Signup')}>
+            <TouchableOpacity onPress={() => navigation.navigate(ROUTES.SIGN_UP)}>
               <Text style={styles.signupLink}>Đăng ký</Text>
             </TouchableOpacity>
           </View>
