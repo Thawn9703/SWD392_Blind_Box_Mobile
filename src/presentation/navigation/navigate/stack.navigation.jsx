@@ -5,7 +5,7 @@ import { ROUTES } from "@presentation/navigation/routes";
 
 // Import các screens
 // import HomeScreen from '@presentation/screens/HomeScreen/HomeScreen';
-// import LoginScreen from '@presentation/screens/LoginScreen/LoginScreen';
+import LoginScreen from '@presentation/screens/LoginScreen/LoginScreen';
 // import SignUpScreen from '@presentation/screens/SignUpScreen/SignUpScreen';
 // import ForgotPasswordScreen from '@presentation/screens/ForgotPasswordScreen/ForgotPasswordScreen';
 import HomePageScreen from "@presentation/screens/HomePageScreen/HomePageScreen";
@@ -19,14 +19,17 @@ import ProductDetailScreen from "@presentation/screens/ProductDetailScreen/Produ
 import AddToCartScreen from "@presentation/screens/AddToCartScreen/AddToCartScreen";
 import PurchaseHistoryScreen from "@presentation/screens/PurchaseHistoryScreen/PurchaseHistoryScreen";
 import OrderStatusScreen from "@presentation/screens/OrderStatusScreen/OrderStatusScreen";
+import ProductDetailTierScreen from "@presentation/screens/ProductDetailTierScreen/ProductDetailTierScreen";
+import ProductDetailNewTierScreen from "@presentation/screens/ProductDetailNewTierScreen/ProductDetailNewTierScreen";
+
 const Stack = createStackNavigator();
 
 const StackNavigation = () => {
   return (
     <Stack.Navigator screenOptions={{ headerShown: false }}>
-      {/* <Stack.Screen name={ROUTES.HOME_SCREEN} component={HomeScreen} />
+      {/* <Stack.Screen name={ROUTES.HOME_SCREEN} component={HomeScreen} /> */}
           <Stack.Screen name={ROUTES.LOGIN} component={LoginScreen} />
-          <Stack.Screen name={ROUTES.SIGN_UP} component={SignUpScreen} />
+          {/* <Stack.Screen name={ROUTES.SIGN_UP} component={SignUpScreen} />
           <Stack.Screen name={ROUTES.FORGOT_PASSWORD} component={ForgotPasswordScreen} /> */}
       {/* <Stack.Screen name={ROUTES.HOME_PAGE_SCREEN} component={HomePageScreen}   /> */}
       <Stack.Screen
@@ -58,6 +61,14 @@ const StackNavigation = () => {
       <Stack.Screen
         name={ROUTES.ADD_TO_CART_SCREEN}
         component={AddToCartScreen}
+      />
+      <Stack.Screen
+        name={ROUTES.PRODUCT_DETAIL_TIER_SCREEN}
+        component={ProductDetailTierScreen}
+      />
+      <Stack.Screen
+        name={ROUTES.PRODUCT_DETAIL_NEW_TIER_SCREEN}
+        component={ProductDetailNewTierScreen}
       />
       <Stack.Screen name={ROUTES.PROFILE_SCREEN} component={ProfileScreen} />
     </Stack.Navigator>

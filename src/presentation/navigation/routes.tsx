@@ -12,5 +12,7 @@ export enum ROUTES {
     ADD_TO_CART_SCREEN = "AddToCartScreen",
     PURCHASE_HISTORY_SCREEN = "PurchaseHistoryScreen",
     ORDER_STATUS_SCREEN = "OrderStatusScreen",
+    PRODUCT_DETAIL_TIER_SCREEN = "ProductDetailTierScreen",
+    PRODUCT_DETAIL_NEW_TIER_SCREEN = "ProductDetailNewTierScreen",
   }
   

@@ -1,29 +1,26 @@
-import React from "react";
-import { StyleSheet } from "react-native";
-import { Provider } from "react-redux";
-import { NavigationContainer } from "@react-navigation/native";
+import React from 'react';
+import { NavigationContainer } from '@react-navigation/native';
+import { AuthProvider } from '@presentation/context/AuthContext';
+import { CartProvider } from '@presentation/context/CartContext';
+import PopMartApp from '@presentation/screens/HomePageScreen/HomePageScreen';
+import LoginScreen from '@presentation/screens/LoginScreen/LoginScreen';
+import { createStackNavigator } from '@react-navigation/stack';
 
-import store from "./src/domain/store/redux/store"; 
-import StackNavigation from "@presentation/navigation/navigate/stack.navigation.jsx";
-import { CartProvider } from "@presentation/context/CartContext";
+const Stack = createStackNavigator();
 
-export default function App() {
+const App = () => {
   return (
-    <Provider store={store}>
-      <NavigationContainer>
+    <NavigationContainer>
+      <AuthProvider>
         <CartProvider>
-          <StackNavigation />
+          <Stack.Navigator screenOptions={{ headerShown: false }}>
+            <Stack.Screen name="Login" component={LoginScreen} />
+            <Stack.Screen name="Main" component={PopMartApp} />
+          </Stack.Navigator>
         </CartProvider>
-      </NavigationContainer>
-    </Provider>
+      </AuthProvider>
+    </NavigationContainer>
   );
-}
+};
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#fff",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-});
+export default App;

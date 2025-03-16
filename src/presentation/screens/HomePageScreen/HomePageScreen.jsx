@@ -13,6 +13,8 @@ import ProductDetailScreen from '@presentation/screens/ProductDetailScreen/Produ
 import AddToCartScreen from '@presentation/screens/AddToCartScreen/AddToCartScreen';
 import PurchaseHistoryScreen from '@presentation/screens/PurchaseHistoryScreen/PurchaseHistoryScreen';
 import { useCart } from '@presentation/context/CartContext';
+import ProductDetailTierScreen from '@presentation/screens/ProductDetailTierScreen/ProductDetailTierScreen';
+import ProductDetailNewTierScreen from '@presentation/screens/ProductDetailNewTierScreen/ProductDetailNewTierScreen';
 
 const Tab = createBottomTabNavigator();
 
@@ -140,7 +142,7 @@ const HomeScreen = () => {
             key={index}
             style={styles.productCard}
             onPress={() =>
-              navigation.navigate('ProductDetailScreen', {
+              navigation.navigate('ProductDetailTierScreen', {
                 product: {
                   // Truyền dữ liệu sản phẩm tuỳ ý
                   title: 'Dimoo Space Series - Package #8',
