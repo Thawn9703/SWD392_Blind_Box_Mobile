@@ -54,13 +54,15 @@ const LoginScreen = ({ navigation }) => {
   const handleLogin = async () => {
     const isEmailValid = validateEmail(email);
     const isPasswordValid = validatePassword(password);
-
+  
     if (isEmailValid && isPasswordValid) {
       const success = await login(email, password);
       if (success) {
-        navigation.navigate('Home');
-      } else {
-        Alert.alert('Đăng nhập thất bại', error || 'Email hoặc mật khẩu không hợp lệ. Vui lòng thử lại.');
+        // Chuyển hướng đến màn hình chính sau khi đăng nhập thành công
+        navigation.reset({
+          index: 0,
+          routes: [{ name: 'Main' }],
+        });
       }
     }
   };
