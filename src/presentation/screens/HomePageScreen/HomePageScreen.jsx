@@ -1,10 +1,21 @@
-import {React, useState} from 'react';
-import { View, Text, TextInput, TouchableOpacity, ScrollView, Image, StyleSheet, isFocused } from 'react-native';
+import React, { useState, useEffect, useRef } from 'react';
+import { 
+  View, 
+  Text, 
+  TextInput, 
+  TouchableOpacity, 
+  ScrollView, 
+  Image, 
+  StyleSheet, 
+  Dimensions,
+  ActivityIndicator,
+  FlatList
+} from 'react-native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { NavigationContainer } from '@react-navigation/native';
-import { Ionicons, MaterialCommunityIcons, FontAwesome5 } from 'react-native-vector-icons';
+import { Ionicons, MaterialCommunityIcons, FontAwesome5, AntDesign } from 'react-native-vector-icons';
 import { useNavigation } from '@react-navigation/native';
 
+import blindboxFacade from '@domain/facades/blindboxFacade';
 import NewArrivalsScreen from "@presentation/screens/NewArrivalsScreen/NewArrivalsScreen";
 import CategoriesScreen from "@presentation/screens/CategoriesScreen/CategoriesScreen";
 import ProfileScreen from "@presentation/screens/ProfileScreen/ProfileScreen";
@@ -17,6 +28,7 @@ import ProductDetailTierScreen from '@presentation/screens/ProductDetailTierScre
 import ProductDetailNewTierScreen from '@presentation/screens/ProductDetailNewTierScreen/ProductDetailNewTierScreen';
 
 const Tab = createBottomTabNavigator();
+const { width } = Dimensions.get('window');
 
 const PopMartApp = () => {
   const { cartItemCount } = useCart();
@@ -25,7 +37,7 @@ const PopMartApp = () => {
     <Tab.Navigator
       screenOptions={{
         headerShown: false,
-        style: styles.tabBarStyle, // Giữ nguyên style tabBar như bạn đã có
+        style: styles.tabBarStyle,
         tabBarActiveTintColor: '#d32f2f',
         tabBarInactiveTintColor: '#757575',
       }}
@@ -43,34 +55,8 @@ const PopMartApp = () => {
           ),
         }}
       />
-      {/* <Tab.Screen
-        name="Purchase History"
-        component={PurchaseHistoryScreen}
-        options={{
-          tabBarIcon: ({ focused, color }) => (
-            <MaterialCommunityIcons
-            name={focused ? 'receipt' : 'receipt'}  
-            size={24}
-            color={color}
-            />
-          ),
-        }}
-      /> */}
-      {/* <Tab.Screen
-        name="Categories"
-        component={CategoriesScreen}
-        options={{
-          tabBarIcon: ({ focused, color }) => (
-            <Ionicons
-              name={focused ? 'grid' : 'grid-outline'}
-              size={24}
-              color={color}
-            />
-          ),
-        }}
-      /> */}
       <Tab.Screen 
-        name="Cart" // Thêm màn hình Cart
+        name="Cart"
         component={AddToCartScreen} 
         options={{
           tabBarIcon: ({ focused, color }) => (
@@ -101,76 +87,361 @@ const PopMartApp = () => {
 };
 
 const HomeScreen = () => {
-  
   const navigation = useNavigation();
   const [isFocused, setIsFocused] = useState(false);
-  const [searchText, setSearchText] = useState(''); 
-  
-  return (<ScrollView style={styles.homeContainer}>
-    {/* Navbar */}
-    <View style={styles.navbar}>
-      <Text style={styles.title}>Blindbox®</Text>
-      <View style={styles.searchContainer}>
-        <TextInput
-          style={[
-            styles.searchInput,
-            isFocused && styles.searchInputFocused
-          ]}
-          placeholder={isFocused ? 'Blindbox packages' : 'Search...'}
-          placeholderTextColor="#999"
-          value={searchText}
-          onChangeText={setSearchText}
-          onFocus={() => setIsFocused(true)}
-          onBlur={() => setIsFocused(false)}
-        />
-      </View>
-    </View>
-    
-    {/* Sidebar Navigation */}
-    <ScrollView horizontal style={styles.navItemsWrapper} showsHorizontalScrollIndicator={false}>
-      {['SKULLPANDA', 'LABUBU', 'DIMOO', 'MOLLY', 'KIMMON', 'ROLIFE'].map((item, index) => (
-        <TouchableOpacity key={index} style={styles.navItem}>
-          <Text style={styles.navItemText}>{item}</Text>
-        </TouchableOpacity>
-      ))}
-    </ScrollView>
+  const [searchText, setSearchText] = useState('');
+  const [blindboxSeries, setBlindboxSeries] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [currentSlideIndex, setCurrentSlideIndex] = useState(0);
+  const flatListRef = useRef(null);
+  const autoScrollTimer = useRef(null);
 
-    {/* Product Grid */}
-    <View style={styles.gridContainer}>
-        {[1, 2, 3, 4, 5, 6].map((item, index) => (
-          <TouchableOpacity
-            key={index}
-            style={styles.productCard}
-            onPress={() =>
-              navigation.navigate('ProductDetailTierScreen', {
-                product: {
-                  // Truyền dữ liệu sản phẩm tuỳ ý
-                  title: 'Dimoo Space Series - Package #8',
-                  price: '$85.50',
-                  originalPrice: '$95.00',
-                  campaign: 'MILESTONE CAMPAIGN',
-                },
-              })
-            }
-          >
-            <Image
-              source={{ uri: 'https://via.placeholder.com/150' }}
-              style={styles.productImage}
-            />
-            <Text style={styles.productTitle}>THE MONSTERS</Text>
-            <Text style={styles.productPrice}>¥69/抽</Text>
+  // Fetch data from API using facade
+  useEffect(() => {
+    fetchBlindboxSeries();
+    return () => {
+      if (autoScrollTimer.current) {
+        clearInterval(autoScrollTimer.current);
+      }
+    };
+  }, []);
+
+  // Auto scroll effect
+  useEffect(() => {
+    if (blindboxSeries.length > 0) {
+      autoScrollTimer.current = setInterval(() => {
+        let nextIndex = currentSlideIndex + 1;
+        if (nextIndex >= blindboxSeries.slice(0, 10).length) {
+          nextIndex = 0;
+        }
+        
+        if (flatListRef.current) {
+          flatListRef.current.scrollToIndex({
+            index: nextIndex,
+            animated: true
+          });
+          setCurrentSlideIndex(nextIndex);
+        }
+      }, 2000);
+    }
+    
+    return () => {
+      if (autoScrollTimer.current) {
+        clearInterval(autoScrollTimer.current);
+      }
+    };
+  }, [currentSlideIndex, blindboxSeries]);
+
+  const fetchBlindboxSeries = async () => {
+    try {
+      setLoading(true);
+      // Sử dụng facade thay vì gọi API trực tiếp
+      const data = await blindboxFacade.getBlindboxSeries();
+      
+      if (data && data.content) {
+        setBlindboxSeries(data.content);
+      } else {
+        setBlindboxSeries([]);
+      }
+      setLoading(false);
+    } catch (err) {
+      console.error("Error fetching blindbox series:", err);
+      setError("Failed to load products");
+      setLoading(false);
+    }
+  };
+
+  const handleViewProductDetails = (product) => {
+    navigation.navigate('ProductDetailTierScreen', { product });
+  };
+
+  const renderSlideItem = ({ item, index }) => (
+    <View style={styles.slideItemContainer}>
+      <TouchableOpacity 
+        style={styles.slideItem}
+        onPress={() => handleViewProductDetails(item)}
+      >
+        <Image
+          source={{ uri: item.imageUrl || 'https://via.placeholder.com/400x300' }}
+          style={styles.slideImage}
+        />
+        <View style={styles.slideInfoContainer}>
+          <View style={styles.tagContainer}>
+            <Text style={styles.seriesTag}>Series {item.seriesNumber}</Text>
+            <Text style={styles.stockTag}>In Stock</Text>
+          </View>
+          <Text style={styles.slideTitle}>Mystery Series {item.seriesNumber}</Text>
+          <Text style={styles.slideDescription} numberOfLines={2}>
+            Exciting mystery collection featuring unique collectibles in Series {item.seriesNumber}
+          </Text>
+          <View style={styles.priceContainer}>
+            <Text style={styles.packagePrice}>Package: {item.packagePrice || (item.price * 5.5).toFixed(2)} đ</Text>
+          </View>
+          <View style={styles.buttonContainer}>
+            <TouchableOpacity style={styles.detailsButton}>
+              <Text style={styles.detailsButtonText}>View Details</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.cartButton}>
+              <Text style={styles.cartButtonText}>Add to Cart</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </TouchableOpacity>
+    </View>
+  );
+
+  const handleOnViewableItemsChanged = useRef(({ viewableItems }) => {
+    if (viewableItems.length > 0) {
+      setCurrentSlideIndex(viewableItems[0].index);
+    }
+  }).current;
+
+  const viewabilityConfig = useRef({
+    itemVisiblePercentThreshold: 50
+  }).current;
+
+  const renderFeaturedCollectionItem = (item, index) => (
+    <TouchableOpacity 
+      key={index}
+      style={styles.collectionCard}
+      onPress={() => handleViewProductDetails(item)}
+    >
+      <Image
+        source={{ uri: item.imageUrl || 'https://via.placeholder.com/200' }}
+        style={styles.collectionImage}
+      />
+      <View style={styles.collectionTagContainer}>
+        <Text style={styles.collectionSeriesTag}>Series {item.seriesNumber}</Text>
+        <Text style={styles.collectionStockTag}>In Stock</Text>
+      </View>
+      <Text style={styles.collectionTitle}>Mystery Series {item.seriesNumber}</Text>
+      <Text style={styles.collectionDescription} numberOfLines={3}>
+        Exciting mystery collection featuring unique collectibles in Series {item.seriesNumber}
+      </Text>
+      <View style={styles.collectionPriceContainer}>
+        <Text style={styles.collectionPrice}>Price: {item.packagePrice || (item.price * 5.5).toFixed(2)} đ</Text>
+      </View>
+      <TouchableOpacity style={styles.collectionViewDetailsButton}>
+        <Text style={styles.collectionViewDetailsText}>View Details</Text>
+      </TouchableOpacity>
+    </TouchableOpacity>
+  );
+
+  const renderAboutBoxItem = (item, index) => (
+    <TouchableOpacity 
+      key={index}
+      style={styles.aboutBoxCard}
+      onPress={() => handleViewProductDetails(item)}
+    >
+      <Image
+        source={{ uri: item.imageUrl || 'https://via.placeholder.com/150' }}
+        style={styles.aboutBoxImage}
+      />
+      <Text style={styles.aboutBoxTitle}>Mystery Series {item.seriesNumber}</Text>
+      <Text style={styles.aboutBoxPrice}>{item.packagePrice || (item.price * 5.5).toFixed(2)} đ</Text>
+      <View style={styles.aboutBoxTagContainer}>
+        <Text style={styles.aboutBoxStockTag}>In Stock</Text>
+      </View>
+    </TouchableOpacity>
+  );
+
+  const renderCollectionGuideStep = (number, title, description) => (
+    <View style={styles.guideStepContainer}>
+      <View style={styles.guideStepNumberContainer}>
+        <Text style={styles.guideStepNumber}>{number}</Text>
+      </View>
+      <Text style={styles.guideStepTitle}>{title}</Text>
+      <Text style={styles.guideStepDescription}>{description}</Text>
+    </View>
+  );
+
+  if (loading) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color="#d32f2f" />
+        <Text>Loading products...</Text>
+      </View>
+    );
+  }
+
+  if (error) {
+    return (
+      <View style={styles.errorContainer}>
+        <Text style={styles.errorText}>{error}</Text>
+        <TouchableOpacity style={styles.retryButton} onPress={fetchBlindboxSeries}>
+          <Text style={styles.retryButtonText}>Retry</Text>
+        </TouchableOpacity>
+      </View>
+    );
+  }
+
+  return (
+    <ScrollView style={styles.homeContainer}>
+      {/* Navbar */}
+      <View style={styles.navbar}>
+        <Text style={styles.title}>Blindbox®</Text>
+        <View style={styles.searchContainer}>
+          <TextInput
+            style={[
+              styles.searchInput,
+              isFocused && styles.searchInputFocused
+            ]}
+            placeholder={isFocused ? 'Blindbox packages' : 'Search...'}
+            placeholderTextColor="#999"
+            value={searchText}
+            onChangeText={setSearchText}
+            onFocus={() => setIsFocused(true)}
+            onBlur={() => setIsFocused(false)}
+          />
+        </View>
+      </View>
+      
+      {/* Sidebar Navigation */}
+      <ScrollView horizontal style={styles.navItemsWrapper} showsHorizontalScrollIndicator={false}>
+        {['SKULLPANDA', 'LABUBU', 'DIMOO', 'MOLLY', 'KIMMON', 'ROLIFE'].map((item, index) => (
+          <TouchableOpacity key={index} style={styles.navItem}>
+            <Text style={styles.navItemText}>{item}</Text>
           </TouchableOpacity>
         ))}
+      </ScrollView>
+
+      {/* Slider section - First 10 products */}
+      <View style={styles.sliderContainer}>
+        <FlatList
+          ref={flatListRef}
+          data={blindboxSeries.slice(0, 10)}
+          renderItem={renderSlideItem}
+          keyExtractor={(item, index) => `slide-${index}`}
+          horizontal
+          pagingEnabled
+          showsHorizontalScrollIndicator={false}
+          onViewableItemsChanged={handleOnViewableItemsChanged}
+          viewabilityConfig={viewabilityConfig}
+          initialScrollIndex={0}
+          getItemLayout={(data, index) => ({
+            length: width,
+            offset: width * index,
+            index,
+          })}
+          contentContainerStyle={styles.sliderContentContainer}
+        />
+        <View style={styles.paginationContainer}>
+          {blindboxSeries.slice(0, 10).map((_, index) => (
+            <View
+              key={index}
+              style={[
+                styles.paginationDot,
+                { backgroundColor: index === currentSlideIndex ? '#d32f2f' : '#ccc' }
+              ]}
+            />
+          ))}
+        </View>
       </View>
-  </ScrollView>);
+
+      {/* Featured Collections Section */}
+      <View style={styles.sectionContainer}>
+        <View style={styles.sectionHeader}>
+          <Text style={styles.sectionTitle}>Featured Collections</Text>
+          <TouchableOpacity>
+            <Text style={styles.viewAllText}>View All</Text>
+          </TouchableOpacity>
+        </View>
+        <Text style={styles.sectionSubtitle}>Explore our latest blind box series</Text>
+        
+        <View style={styles.featuredCollectionsContainer}>
+          {blindboxSeries.slice(0, 4).map((item, index) => renderFeaturedCollectionItem(item, index))}
+        </View>
+      </View>
+
+      {/* About Our Blind Boxes Section */}
+      <View style={styles.aboutSectionContainer}>
+        <Text style={styles.aboutSectionTitle}>About Our Blind Boxes</Text>
+        <Text style={styles.aboutSectionSubtitle}>Discover the thrill of mystery collectibles</Text>
+        
+        <Text style={styles.aboutSectionDescription}>
+          Each blind box contains a surprise figurine from your favorite series. Collect them all and find the
+          rare special editions!
+        </Text>
+        <Text style={styles.aboutSectionDescription}>
+          Our blind boxes feature high-quality materials and detailed craftsmanship, making them perfect for
+          collectors and enthusiasts alike.
+        </Text>
+        
+        <TouchableOpacity style={styles.browseCollectionsButton}>
+          <Text style={styles.browseCollectionsButtonText}>Browse Collections</Text>
+        </TouchableOpacity>
+
+        <View style={styles.aboutBoxesContainer}>
+          {blindboxSeries.slice(0, 4).map((item, index) => renderAboutBoxItem(item, index))}
+        </View>
+      </View>
+
+      {/* Collection Guide Section */}
+      <View style={styles.guideContainer}>
+        <Text style={styles.guideSectionTitle}>Blind Box Collection Guide</Text>
+        
+        <View style={styles.guideStepsContainer}>
+          {renderCollectionGuideStep(
+            "1", 
+            "Choose Your Series", 
+            "Browse our extensive collection of blind box series and find the ones that match your style."
+          )}
+          
+          {renderCollectionGuideStep(
+            "2", 
+            "Unbox Your Surprise", 
+            "Experience the excitement of opening your blind box and discovering which figurine you got!"
+          )}
+          
+          {renderCollectionGuideStep(
+            "3", 
+            "Complete Your Collection", 
+            "Keep collecting to find all the figurines in each series, including rare special editions!"
+          )}
+        </View>
+
+        <TouchableOpacity style={styles.startCollectingButton}>
+          <Text style={styles.startCollectingButtonText}>Start Collecting</Text>
+        </TouchableOpacity>
+      </View>
+    </ScrollView>
+  );
 };
 
 const styles = StyleSheet.create({
   // Tổng thể màn hình Home
   homeContainer: {
     flex: 1,
-    backgroundColor: '#f9f9f9',  // Màu nền nhẹ nhàng
+    backgroundColor: '#f9f9f9',  
     padding: 10,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  errorContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  errorText: {
+    fontSize: 16,
+    color: '#d32f2f',
+    marginBottom: 15,
+  },
+  retryButton: {
+    backgroundColor: '#d32f2f',
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    borderRadius: 5,
+  },
+  retryButtonText: {
+    color: '#fff',
+    fontWeight: 'bold',
   },
 
   // Navbar
@@ -184,20 +455,27 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: '#d32f2f',
   },
+  searchContainer: {
+    position: 'relative',
+    flex: 1,
+    marginLeft: 10,
+  },
   searchInput: {
     borderWidth: 1,
     borderColor: '#ddd',
-    padding: 5,
+    padding: 8,
     borderRadius: 5,
-    width: 150,
-    marginLeft: 10,
     backgroundColor: '#fff',
-    // Thêm hiệu ứng shadow nhẹ
+    fontSize: 14,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.1,
     shadowRadius: 2,
     elevation: 2,
+  },
+  searchInputFocused: {
+    borderColor: '#d32f2f',
+    borderWidth: 2,
   },
 
   // Sidebar Navigation
@@ -211,7 +489,6 @@ const styles = StyleSheet.create({
     marginRight: 10,
     backgroundColor: '#fff',
     borderRadius: 20,
-    // Thêm shadow cho item
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.07,
@@ -224,100 +501,390 @@ const styles = StyleSheet.create({
     fontWeight: '500',
   },
 
-  // Product Grid
-  gridContainer: {
+  // Slider Section
+  sliderContainer: {
+    height: 450,
+    marginVertical: 10,
+  },
+  sliderContentContainer: {
+    paddingRight: 20, // Add padding to prevent cut-off
+  },
+  slideItemContainer: {
+    width: width,
+    paddingHorizontal: 10,
+  },
+  slideItem: {
+    height: 420,
+    borderRadius: 15,
+    backgroundColor: '#fff',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 5,
+    overflow: 'hidden',
+  },
+  slideImage: {
+    width: '100%',
+    height: 200,
+    resizeMode: 'cover',
+  },
+  slideInfoContainer: {
+    padding: 15,
+    flex: 1, // Make sure this container uses all available space
+  },
+  tagContainer: {
+    flexDirection: 'row',
+    marginBottom: 5,
+  },
+  seriesTag: {
+    backgroundColor: '#e3f2fd',
+    color: '#2196f3',
+    fontSize: 12,
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 4,
+    marginRight: 5,
+  },
+  stockTag: {
+    backgroundColor: '#e8f5e9',
+    color: '#4caf50',
+    fontSize: 12,
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 4,
+  },
+  slideTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#333',
+    marginBottom: 5,
+  },
+  slideDescription: {
+    fontSize: 14,
+    color: '#666',
+    marginBottom: 10,
+  },
+  priceContainer: {
+    marginBottom: 15,
+  },
+  packagePrice: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#d32f2f',
+  },
+  buttonContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginTop: 'auto', // Push to bottom of container
+  },
+  detailsButton: {
+    backgroundColor: '#fff',
+    borderWidth: 1,
+    borderColor: '#d32f2f',
+    paddingVertical: 8,
+    paddingHorizontal: 15,
+    borderRadius: 20,
+    flex: 1,
+    marginRight: 10,
+    alignItems: 'center',
+  },
+  detailsButtonText: {
+    color: '#d32f2f',
+    fontWeight: 'bold',
+  },
+  cartButton: {
+    backgroundColor: '#d32f2f',
+    paddingVertical: 8,
+    paddingHorizontal: 15,
+    borderRadius: 20,
+    flex: 1,
+    alignItems: 'center',
+  },
+  cartButtonText: {
+    color: '#fff',
+    fontWeight: 'bold',
+  },
+  paginationContainer: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginTop: 10,
+  },
+  paginationDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    marginHorizontal: 4,
+  },
+
+  // Featured Collections Section
+  sectionContainer: {
+    marginVertical: 20,
+  },
+  sectionHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 5,
+  },
+  sectionTitle: {
+    fontSize: 22,
+    fontWeight: 'bold',
+    color: '#333',
+  },
+  viewAllText: {
+    fontSize: 14,
+    color: '#2196f3',
+    fontWeight: '500',
+  },
+  sectionSubtitle: {
+    fontSize: 14,
+    color: '#757575',
+    marginBottom: 15,
+  },
+  featuredCollectionsContainer: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     justifyContent: 'space-between',
   },
-  productCard: {
+  collectionCard: {
     width: '48%',
     backgroundColor: '#fff',
-    padding: 10,
     borderRadius: 10,
-    marginBottom: 10,
-    alignItems: 'center',
-    // Thêm shadow cho card
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
-    shadowRadius: 3,
+    shadowRadius: 4,
     elevation: 3,
+    marginBottom: 15,
+    overflow: 'hidden',
+    paddingBottom: 10,
   },
-  productImage: {
-    width: 100,
-    height: 100,
-    borderRadius: 10,
-    marginBottom: 5,
+  collectionImage: {
+    width: '100%',
+    height: 150,
+    resizeMode: 'cover',
   },
-  productTitle: {
+  collectionTagContainer: {
+    flexDirection: 'row',
+    padding: 10,
+  },
+  collectionSeriesTag: {
+    backgroundColor: '#e3f2fd',
+    color: '#2196f3',
+    fontSize: 10,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 4,
+    marginRight: 5,
+  },
+  collectionStockTag: {
+    backgroundColor: '#e8f5e9',
+    color: '#4caf50',
+    fontSize: 10,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 4,
+  },
+  collectionTitle: {
     fontSize: 16,
     fontWeight: 'bold',
-    marginVertical: 5,
     color: '#333',
+    paddingHorizontal: 10,
   },
-  productPrice: {
+  collectionDescription: {
+    fontSize: 12,
+    color: '#666',
+    paddingHorizontal: 10,
+    marginVertical: 5,
+    minHeight: 45,
+  },
+  collectionPriceContainer: {
+    paddingHorizontal: 10,
+    marginBottom: 10,
+  },
+  collectionPrice: {
     fontSize: 14,
-    fontWeight: '600',
+    fontWeight: 'bold',
     color: '#d32f2f',
   },
+  collectionViewDetailsButton: {
+    backgroundColor: '#fff',
+    borderWidth: 1,
+    borderColor: '#d32f2f',
+    paddingVertical: 8,
+    paddingHorizontal: 15,
+    borderRadius: 20,
+    marginTop: 5,
+    alignItems: 'center',
+    marginHorizontal: 10,
+  },
+  collectionViewDetailsText: {
+    color: '#d32f2f',
+    fontWeight: 'bold',
+    fontSize: 12,
+  },
 
-  // Tab bar
+  // About Our Blind Boxes Section
+  aboutSectionContainer: {
+    marginVertical: 20,
+    backgroundColor: '#fff',
+    borderRadius: 10,
+    padding: 15,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 5,
+    elevation: 2,
+  },
+  aboutSectionTitle: {
+    fontSize: 22,
+    fontWeight: 'bold',
+    color: '#333',
+    marginBottom: 5,
+  },
+  aboutSectionSubtitle: {
+    fontSize: 14,
+    color: '#757575',
+    marginBottom: 15,
+  },
+  aboutSectionDescription: {
+    fontSize: 14,
+    color: '#666',
+    marginBottom: 10,
+    lineHeight: 20,
+  },
+  browseCollectionsButton: {
+    backgroundColor: '#000',
+    alignSelf: 'flex-start',
+    paddingVertical: 8,
+    paddingHorizontal: 15,
+    borderRadius: 20,
+    marginVertical: 15,
+  },
+  browseCollectionsButtonText: {
+    color: '#fff',
+    fontWeight: 'bold',
+    fontSize: 14,
+  },
+  aboutBoxesContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
+    marginTop: 10,
+  },
+  aboutBoxCard: {
+    width: '48%',
+    marginBottom: 15,
+  },
+  aboutBoxImage: {
+    width: '100%',
+    height: 120,
+    borderRadius: 8,
+    marginBottom: 5,
+  },
+  aboutBoxTitle: {
+    fontSize: 14,
+    fontWeight: 'bold',
+    color: '#333',
+    marginBottom: 3,
+  },
+  aboutBoxPrice: {
+    fontSize: 14,
+    fontWeight: 'bold',
+    color: '#d32f2f',
+    marginBottom: 5,
+  },
+  aboutBoxTagContainer: {
+    flexDirection: 'row',
+  },
+  aboutBoxStockTag: {
+    backgroundColor: '#e8f5e9',
+    color: '#4caf50',
+    fontSize: 10,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 4,
+  },
+
+  // Collection Guide Section
+  guideContainer: {
+    marginVertical: 20,
+    backgroundColor: '#f5f5f5',
+    borderRadius: 10,
+    padding: 20,
+  },
+  guideSectionTitle: {
+    fontSize: 22,
+    fontWeight: 'bold',
+    color: '#333',
+    marginBottom: 20,
+    textAlign: 'center',
+  },
+  guideStepsContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 25,
+  },
+  guideStepContainer: {
+    flex: 1,
+    alignItems: 'center',
+    paddingHorizontal: 10,
+  },
+  guideStepNumberContainer: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: '#e3f2fd',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 10,
+  },
+  guideStepNumber: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#2196f3',
+  },
+  guideStepTitle: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#333',
+    marginBottom: 5,
+    textAlign: 'center',
+  },
+  guideStepDescription: {
+    fontSize: 12,
+    color: '#666',
+    textAlign: 'center',
+    lineHeight: 18,
+  },
+  startCollectingButton: {
+    backgroundColor: '#000',
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    borderRadius: 25,
+    alignSelf: 'center',
+  },
+  startCollectingButtonText: {
+    color: '#fff',
+    fontWeight: 'bold',
+    fontSize: 16,
+  },
+
+  // Tab bar style
   tabBarStyle: {
     backgroundColor: '#ffffff',
     borderTopWidth: 1,
     borderTopColor: '#e5e5e5',
     paddingBottom: 5,
     paddingTop: 5,
-    // Thêm chiều cao và shadow nhẹ cho tab bar
     height: 60,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: -2 },
     shadowOpacity: 0.05,
     shadowRadius: 4,
     elevation: 3,
-  },
-  searchContainer: {
-    position: 'relative',
-    flex: 1,
-    marginLeft: 10,
-  },
-  
-  searchLabel: {
-    position: 'absolute',
-    top: -20,
-    left: 5,
-    fontSize: 12,
-    color: '#d32f2f',
-    backgroundColor: '#fff',
-    paddingHorizontal: 4,
-    borderRadius: 4,
-    // Thêm shadow cho label
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 1,
-    elevation: 1,
-  },
-  
-  searchInput: {
-    borderWidth: 1,
-    borderColor: '#ddd',
-    padding: 8,
-    borderRadius: 5,
-    backgroundColor: '#fff',
-    fontSize: 14,
-    // Thêm hiệu ứng shadow nhẹ
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
-    elevation: 2,
-  },
-  
-  searchInputFocused: {
-    borderColor: '#d32f2f',
-    borderWidth: 2,
   },
 });
 
