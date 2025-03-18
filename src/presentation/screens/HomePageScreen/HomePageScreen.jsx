@@ -296,15 +296,6 @@ const HomeScreen = () => {
           />
         </View>
       </View>
-      
-      {/* Sidebar Navigation */}
-      <ScrollView horizontal style={styles.navItemsWrapper} showsHorizontalScrollIndicator={false}>
-        {['SKULLPANDA', 'LABUBU', 'DIMOO', 'MOLLY', 'KIMMON', 'ROLIFE'].map((item, index) => (
-          <TouchableOpacity key={index} style={styles.navItem}>
-            <Text style={styles.navItemText}>{item}</Text>
-          </TouchableOpacity>
-        ))}
-      </ScrollView>
 
       {/* Slider section - First 10 products */}
       <View style={styles.sliderContainer}>
