@@ -96,6 +96,7 @@ const HomeScreen = () => {
   const [currentSlideIndex, setCurrentSlideIndex] = useState(0);
   const flatListRef = useRef(null);
   const autoScrollTimer = useRef(null);
+  const [isSearching, setIsSearching] = useState(false);
 
   // Fetch data from API using facade
   useEffect(() => {
@@ -109,7 +110,7 @@ const HomeScreen = () => {
 
   // Auto scroll effect
   useEffect(() => {
-    if (blindboxSeries.length > 0) {
+    if (blindboxSeries.length > 0 && !isSearching) {
       autoScrollTimer.current = setInterval(() => {
         let nextIndex = currentSlideIndex + 1;
         if (nextIndex >= blindboxSeries.slice(0, 10).length) {
@@ -131,13 +132,13 @@ const HomeScreen = () => {
         clearInterval(autoScrollTimer.current);
       }
     };
-  }, [currentSlideIndex, blindboxSeries]);
+  }, [currentSlideIndex, blindboxSeries, isSearching]);
 
-  const fetchBlindboxSeries = async () => {
+  const fetchBlindboxSeries = async (searchQuery = null) => {
     try {
       setLoading(true);
       // Sử dụng facade thay vì gọi API trực tiếp
-      const data = await blindboxFacade.getBlindboxSeries();
+      const data = await blindboxFacade.getBlindboxSeries(0, 20, ['id', 'asc'], searchQuery);
       
       if (data && data.content) {
         setBlindboxSeries(data.content);
@@ -154,6 +155,23 @@ const HomeScreen = () => {
 
   const handleViewProductDetails = (product) => {
     navigation.navigate('ProductDetailTierScreen', { product });
+  };
+
+  const handleSearch = (text) => {
+    setSearchText(text);
+    if (text.trim().length > 0) {
+      setIsSearching(true);
+      fetchBlindboxSeries(text);
+    } else {
+      setIsSearching(false);
+      fetchBlindboxSeries();
+    }
+  };
+
+  const resetSearch = () => {
+    setSearchText('');
+    setIsSearching(false);
+    fetchBlindboxSeries();
   };
 
   const renderSlideItem = ({ item, index }) => (
@@ -280,7 +298,9 @@ const HomeScreen = () => {
     <ScrollView style={styles.homeContainer}>
       {/* Navbar */}
       <View style={styles.navbar}>
-        <Text style={styles.title}>Blindbox®</Text>
+        <TouchableOpacity onPress={resetSearch}>
+          <Text style={styles.title}>Blindbox®</Text>
+        </TouchableOpacity>
         <View style={styles.searchContainer}>
           <TextInput
             style={[
@@ -290,12 +310,23 @@ const HomeScreen = () => {
             placeholder={isFocused ? 'Blindbox packages' : 'Search...'}
             placeholderTextColor="#999"
             value={searchText}
-            onChangeText={setSearchText}
+            onChangeText={handleSearch}
             onFocus={() => setIsFocused(true)}
             onBlur={() => setIsFocused(false)}
           />
         </View>
       </View>
+
+      {isSearching && (
+        <View style={styles.searchResultHeader}>
+          <Text style={styles.searchResultText}>
+            Search results for "{searchText}"
+          </Text>
+          <TouchableOpacity onPress={resetSearch}>
+            <Text style={styles.clearSearchText}>Clear</Text>
+          </TouchableOpacity>
+        </View>
+      )}
 
       {/* Slider section - First 10 products */}
       <View style={styles.sliderContainer}>
@@ -469,6 +500,27 @@ const styles = StyleSheet.create({
     borderWidth: 2,
   },
 
+  // Search result styles
+  searchResultHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: 10,
+    paddingHorizontal: 5,
+    backgroundColor: '#f0f0f0',
+    borderRadius: 5,
+    marginVertical: 10,
+  },
+  searchResultText: {
+    fontSize: 14,
+    color: '#555',
+  },
+  clearSearchText: {
+    fontSize: 14,
+    color: '#d32f2f',
+    fontWeight: 'bold',
+  },
+
   // Sidebar Navigation
   navItemsWrapper: {
     flexDirection: 'row',
@@ -492,16 +544,17 @@ const styles = StyleSheet.create({
     fontWeight: '500',
   },
 
-  // Slider Section
+  // Slider Section - Đã cập nhật để sửa lỗi tràn
   sliderContainer: {
     height: 450,
     marginVertical: 10,
+    width: '100%',
   },
   sliderContentContainer: {
-    paddingRight: 20, // Add padding to prevent cut-off
+    // Đã xóa paddingRight để sửa lỗi tràn
   },
   slideItemContainer: {
-    width: width,
+    width: Dimensions.get('window').width - 20, // Trừ đi padding của container cha
     paddingHorizontal: 10,
   },
   slideItem: {
