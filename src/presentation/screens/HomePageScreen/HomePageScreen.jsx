@@ -157,14 +157,18 @@ const HomeScreen = () => {
     navigation.navigate('ProductDetailTierScreen', { product });
   };
 
-  const handleSearch = (text) => {
+  // Hàm chỉ lưu giá trị vào state, không thực hiện tìm kiếm
+  const handleTextChange = (text) => {
     setSearchText(text);
-    if (text.trim().length > 0) {
+  };
+
+  // Hàm thực hiện tìm kiếm khi bấm nút
+  const handleSearch = () => {
+    if (searchText.trim().length > 0) {
       setIsSearching(true);
-      fetchBlindboxSeries(text);
+      fetchBlindboxSeries(searchText);
     } else {
-      setIsSearching(false);
-      fetchBlindboxSeries();
+      resetSearch();
     }
   };
 
@@ -302,18 +306,29 @@ const HomeScreen = () => {
           <Text style={styles.title}>Blindbox®</Text>
         </TouchableOpacity>
         <View style={styles.searchContainer}>
-          <TextInput
-            style={[
-              styles.searchInput,
-              isFocused && styles.searchInputFocused
-            ]}
-            placeholder={isFocused ? 'Blindbox packages' : 'Search...'}
-            placeholderTextColor="#999"
-            value={searchText}
-            onChangeText={handleSearch}
-            onFocus={() => setIsFocused(true)}
-            onBlur={() => setIsFocused(false)}
-          />
+          <View style={styles.searchInputWrapper}>
+            <TextInput
+              style={[
+                styles.searchInput,
+                isFocused && styles.searchInputFocused
+              ]}
+              placeholder={isFocused ? 'Blindbox packages' : 'Search...'}
+              placeholderTextColor="#999"
+              value={searchText}
+              onChangeText={handleTextChange}
+              onFocus={() => setIsFocused(true)}
+              onBlur={() => setIsFocused(false)}
+              returnKeyType="search"
+              onSubmitEditing={handleSearch}
+            />
+            <TouchableOpacity 
+              style={styles.searchButton} 
+              onPress={handleSearch}
+              activeOpacity={0.7}
+            >
+              <Ionicons name="search" size={20} color="#fff" />
+            </TouchableOpacity>
+          </View>
         </View>
       </View>
 
@@ -482,6 +497,10 @@ const styles = StyleSheet.create({
     flex: 1,
     marginLeft: 10,
   },
+  searchInputWrapper: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
   searchInput: {
     borderWidth: 1,
     borderColor: '#ddd',
@@ -494,10 +513,22 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 2,
     elevation: 2,
+    flex: 1,
+    borderTopRightRadius: 0,
+    borderBottomRightRadius: 0,
   },
   searchInputFocused: {
     borderColor: '#d32f2f',
     borderWidth: 2,
+    borderRightWidth: 0,
+  },
+  searchButton: {
+    backgroundColor: '#d32f2f',
+    padding: 9,
+    borderTopRightRadius: 5,
+    borderBottomRightRadius: 5,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
 
   // Search result styles
