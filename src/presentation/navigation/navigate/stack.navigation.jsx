@@ -34,7 +34,7 @@ const StackNavigation = () => {
       {/* <Stack.Screen name={ROUTES.HOME_PAGE_SCREEN} component={HomePageScreen}   /> */}
       <Stack.Screen
         name={ROUTES.HOME_PAGE_SCREEN}
-        component={HomePageStackNavigator}
+        component={HomePageScreen}
       />
       {/* <Stack.Screen
         name={ROUTES.NEW_ARRIVALS_SCREEN}
@@ -62,14 +62,14 @@ const StackNavigation = () => {
         name={ROUTES.ADD_TO_CART_SCREEN}
         component={AddToCartScreen}
       />
-      <Stack.Screen
+      {/* <Stack.Screen
         name={ROUTES.PRODUCT_DETAIL_TIER_SCREEN}
         component={ProductDetailTierScreen}
       />
       <Stack.Screen
         name={ROUTES.PRODUCT_DETAIL_NEW_TIER_SCREEN}
         component={ProductDetailNewTierScreen}
-      />
+      /> */}
       <Stack.Screen name={ROUTES.PROFILE_SCREEN} component={ProfileScreen} />
     </Stack.Navigator>
   );

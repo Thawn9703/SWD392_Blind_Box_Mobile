@@ -154,7 +154,7 @@ const HomeScreen = () => {
   };
 
   const handleViewProductDetails = (product) => {
-    navigation.navigate('ProductDetailTierScreen', { product });
+    navigation.navigate('ProductDetailScreen', { productId: product.id });
   };
 
   // Hàm chỉ lưu giá trị vào state, không thực hiện tìm kiếm

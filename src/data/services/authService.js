@@ -1,6 +1,7 @@
 import axios from 'axios';
 
-const API_BASE_URL = 'http://localhost:8080'; // Thay thế bằng URL API thực của bạn
+//const API_BASE_URL = 'http://localhost:8080'; // Thay thế bằng URL API thực của bạn
+const API_BASE_URL = 'http://10.0.2.2:8080'; // Thay thế bằng URL API thực của bạn
 
 const authService = {
   login: async (email, password) => {

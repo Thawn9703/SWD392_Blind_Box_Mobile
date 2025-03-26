@@ -1,442 +1,493 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Image } from 'react-native';
-import { useRoute, useNavigation } from '@react-navigation/native';
-import Ionicons from 'react-native-vector-icons/Ionicons';
-import { useCart } from '@presentation/context/CartContext';
+import React, { useState, useEffect, useRef } from 'react';
+import { View, Text, Image, FlatList, TouchableOpacity, StyleSheet, Platform, Dimensions } from 'react-native';
+import { useNavigation, useRoute } from '@react-navigation/native';
+import { Ionicons } from '@expo/vector-icons';
+import blindboxFacade from '@domain/facades/blindboxFacade';
+
+const { width, height } = Dimensions.get('window');
 
 const ProductDetailScreen = () => {
-  const route = useRoute();
   const navigation = useNavigation();
-  const { product } = route.params || {};
-
-  // Số lượng mua
+  const route = useRoute();
+  const { productId } = route.params;
+  const [product, setProduct] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [quantity, setQuantity] = useState(1);
-  // Trạng thái hiển thị thông báo add to cart
-  const [showNotification, setShowNotification] = useState(false);
-  // Loại sản phẩm được chọn (Box / Package)
-  const [selectedType, setSelectedType] = useState(null);
-  const { cartItems, setCartItems } = useCart();
-  // Hàm tăng giảm số lượng
-  const handleIncrement = () => setQuantity(quantity + 1);
-  const handleDecrement = () => {
-    if (quantity > 1) setQuantity(quantity - 1);
-  };
-
-  // Hàm xử lý thêm vào giỏ hàng
-  const handleAddToCart = () => {
-    if (!selectedType) {
-      alert('Vui lòng chọn loại sản phẩm trước khi thêm vào giỏ hàng!');
-      return;
-    }
-    
-    const newItem = {
-      id: Date.now().toString(), // tạo id unique
-      title: product?.title || 'Dimoo Space Series - Package #8',
-      image: product?.image || 'https://bizweb.dktcdn.net/100/329/122/files/blind-box-popmart-la-nhung-chiec-hop-kin-co-chua-nhan-vat-ngau-nhien.webp?v=1724125816533',
-      quantity: quantity,
-      price: parseFloat(product?.price?.replace('$', '') || '85.50') * 23000, // Convert to VND
-      selected: false,
-      type: selectedType
+  const [isSingleBoxSelected, setIsSingleBoxSelected] = useState(true);
+  const flatListRef = useRef(null);
+  
+  useEffect(() => {
+    const fetchProductDetails = async () => {
+      try {
+        const data = await blindboxFacade.getBlindboxSeriesById(productId);
+        setProduct(data);
+        setLoading(false);
+      } catch (err) {
+        setError('Không thể tải chi tiết sản phẩm');
+        setLoading(false);
+      }
     };
+    fetchProductDetails();
+  }, [productId]);
 
-    setCartItems([...cartItems, newItem]);
-    setShowNotification(true);
-    setTimeout(() => {
-      setShowNotification(false);
-    }, 2000);
-  };
+  if (loading) {
+    return (
+      <View style={styles.loadingContainer}>
+        <Text>Đang tải...</Text>
+      </View>
+    );
+  }
 
-  // Hàm xử lý "Buy Now"
-  const handleBuyNow = () => {
-    // Thực hiện các hành động liên quan đến mua ngay (ví dụ: chuyển sang màn hình thanh toán)
-    if (!selectedType) {
-      alert('Vui lòng chọn loại sản phẩm trước khi mua!');
-      return;
-    }
-    console.log('Buy Now clicked');
+  if (error) {
+    return (
+      <View style={styles.errorContainer}>
+        <Text>{error}</Text>
+        <TouchableOpacity onPress={() => navigation.goBack()}>
+          <Text>Quay lại</Text>
+        </TouchableOpacity>
+      </View>
+    );
+  }
+
+  const hasCampaign = product.activeCampaign && product.activeCampaign.isActive;
+  const availableUnits = isSingleBoxSelected
+    ? product.availableBoxUnits
+    : product.availablePackageUnits;
+  const price = isSingleBoxSelected ? product.boxPrice : product.packagePrice;
+  const discountPercent = hasCampaign ? product.activeCampaign.campaignTiers[0].discountPercent : 0;
+  const discountedPrice = hasCampaign ? price * (1 - discountPercent / 100) : price;
+
+  // Tạo một mảng duy nhất để sử dụng trong FlatList
+  const productData = [{ 
+    id: 'product-details',
+    product: product
+  }];
+  
+  const renderItem = ({ item }) => {
+    return (
+      <View>
+        {/* Hình ảnh sản phẩm */}
+        <Image
+          source={{ uri: product.seriesImageUrls[0] || 'https://via.placeholder.com/400' }}
+          style={styles.productImage}
+        />
+
+        <View style={styles.detailsContainer}>
+          {/* Tên sản phẩm */}
+          <Text style={styles.productName}>{product.seriesName}</Text>
+
+          {/* Thông tin availability */}
+          <View style={styles.infoRow}>
+            <Text style={styles.seriesId}>Series ID: {product.id}</Text>
+            <View style={styles.tagsContainer}>
+              <Text style={[styles.tag, styles.boxTag]}>BOXES: {product.availableBoxUnits}</Text>
+              <Text style={[styles.tag, styles.packageTag]}>PACKAGES: {product.availablePackageUnits}</Text>
+              <Text style={[styles.tag, styles.activeTag]}>Active</Text>
+            </View>
+          </View>
+
+          {/* Giá sản phẩm */}
+          <View style={styles.priceContainer}>
+            <Text style={styles.price}>
+              {discountedPrice.toLocaleString('vi-VN', { style: 'currency', currency: 'VND' })}
+            </Text>
+            {hasCampaign && (
+              <>
+                <Text style={styles.originalPrice}>
+                  {price.toLocaleString('vi-VN', { style: 'currency', currency: 'VND' })}
+                </Text>
+                <Text style={styles.discountTag}>-{discountPercent}%</Text>
+              </>
+            )}
+          </View>
+
+          {/* Phần campaign */}
+          {hasCampaign && (
+            <View style={styles.campaignSection}>
+              <Text style={styles.sectionTitle}>Chi tiết Campaign</Text>
+              <View style={styles.timelineContainer}>
+                <View style={styles.timelineDot} />
+                <Text>Bắt đầu: {new Date(product.activeCampaign.startCampaignTime).toLocaleDateString()}</Text>
+                <View style={styles.timelineLine} />
+                <View style={styles.timelineDot} />
+                <Text>Giai đoạn hiện tại</Text>
+                <View style={styles.timelineLine} />
+                <View style={styles.timelineDot} />
+                <Text>Kết thúc: {new Date(product.activeCampaign.endCampaignTime).toLocaleDateString()}</Text>
+              </View>
+              {product.activeCampaign.campaignTiers.map((tier, index) => (
+                <View key={index} style={styles.tierInfo}>
+                  <Text>{tier.alias}: Giảm {tier.discountPercent}%</Text>
+                  <Text>{tier.currentCount}/{tier.thresholdQuantity} đơn vị</Text>
+                </View>
+              ))}
+            </View>
+          )}
+
+          {/* Mô tả */}
+          <Text style={styles.sectionTitle}>Mô tả</Text>
+          <Text style={styles.description}>{product.description || 'Không có mô tả'}</Text>
+
+          {/* Tùy chọn mua hàng */}
+          <View style={styles.optionContainer}>
+            <TouchableOpacity
+              style={[styles.optionButton, isSingleBoxSelected && styles.selectedOption]}
+              onPress={() => setIsSingleBoxSelected(true)}
+            >
+              <Text>Lẻ ({product.boxPrice.toLocaleString('vi-VN', { style: 'currency', currency: 'VND' })})</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.optionButton, !isSingleBoxSelected && styles.selectedOption]}
+              onPress={() => setIsSingleBoxSelected(false)}
+            >
+              <Text>Gói ({product.packagePrice.toLocaleString('vi-VN', { style: 'currency', currency: 'VND' })})</Text>
+            </TouchableOpacity>
+          </View>
+
+          {/* Số lượng */}
+          <View style={styles.quantityContainer}>
+            <Text style={styles.quantityLabel}>Số lượng:</Text>
+            <View style={styles.quantitySelector}>
+              <TouchableOpacity onPress={() => quantity > 1 && setQuantity(quantity - 1)}>
+                <Ionicons name="remove-circle-outline" size={24} />
+              </TouchableOpacity>
+              <Text style={styles.quantityText}>{quantity}</Text>
+              <TouchableOpacity onPress={() => quantity < availableUnits && setQuantity(quantity + 1)}>
+                <Ionicons name="add-circle-outline" size={24} />
+              </TouchableOpacity>
+            </View>
+            <Text style={styles.availableText}>
+              {availableUnits} {isSingleBoxSelected ? 'hộp' : 'gói'} còn lại
+            </Text>
+          </View>
+        </View>
+
+        {/* Thêm thông tin khác */}
+        <View style={styles.infoBox}>
+          <Text style={styles.infoText}>• 50% deposit required for pre-orders</Text>
+          <Text style={styles.infoText}>• Price locked once deposit is paid</Text>
+          <Text style={styles.infoText}>• Full payment is due within 14 days after campaign ends</Text>
+          <Text style={styles.infoText}>• Free shipping on orders over 500.000 VND</Text>
+        </View>
+
+        {/* Thêm nội dung lặp lại để đảm bảo có thể cuộn */}
+        <View style={styles.additionalInfoSection}>
+          <Text style={styles.sectionTitle}>Thông tin bổ sung</Text>
+          <Text style={styles.description}>
+            Sản phẩm này là một phần của bộ sưu tập đặc biệt. Mỗi hộp chứa một nhân vật ngẫu nhiên
+            từ bộ sưu tập. Tìm kiếm các nhân vật hiếm với tỷ lệ xuất hiện thấp!
+          </Text>
+          <Text style={styles.description}>
+            Bạn có thể mua lẻ từng hộp hoặc mua theo gói để tiết kiệm chi phí. Khi mua theo gói, bạn
+            sẽ nhận được nhiều hộp với giá ưu đãi so với mua lẻ.
+          </Text>
+        </View>
+
+        {/* Thêm phần đánh giá giả để tăng chiều cao nội dung */}
+        <View style={styles.reviewsSection}>
+          <Text style={styles.sectionTitle}>Đánh giá từ khách hàng</Text>
+          <View style={styles.reviewItem}>
+            <Text style={styles.reviewAuthor}>Nguyễn Văn A</Text>
+            <Text style={styles.reviewRating}>★★★★★</Text>
+            <Text style={styles.reviewContent}>
+              Sản phẩm tuyệt vời! Tôi đã sưu tầm được gần đủ bộ và rất hài lòng với chất lượng.
+            </Text>
+          </View>
+          <View style={styles.reviewItem}>
+            <Text style={styles.reviewAuthor}>Trần Thị B</Text>
+            <Text style={styles.reviewRating}>★★★★☆</Text>
+            <Text style={styles.reviewContent}>
+              Đóng gói cẩn thận, giao hàng nhanh. Sản phẩm đúng như mô tả.
+            </Text>
+          </View>
+        </View>
+
+        {/* Chú ý: thêm padding để tránh bị che bởi nút thêm vào giỏ hàng */}
+        <View style={styles.bottomPadding} />
+      </View>
+    );
   };
 
   return (
     <View style={{ flex: 1 }}>
       {/* Nút back */}
-      <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
-        <Ionicons name="arrow-back" size={28} color="#333" />
+      <TouchableOpacity
+        onPress={() => navigation.goBack()}
+        style={styles.backButton}
+      >
+        <Ionicons name="arrow-back" size={24} color="black" />
       </TouchableOpacity>
 
-      <ScrollView style={styles.container}>
-        {/* Không gian chứa ảnh sản phẩm */}
-        <View style={styles.imageContainer}>
-          <Image
-            source={{ uri: product?.image || 'https://bizweb.dktcdn.net/100/329/122/files/blind-box-popmart-la-nhung-chiec-hop-kin-co-chua-nhan-vat-ngau-nhien.webp?v=1724125816533' }}
-            style={styles.productImage}
-          />
-        </View>
+      {/* Thay thế ScrollView bằng FlatList để có hiệu ứng cuộn tốt hơn */}
+      <FlatList
+        ref={flatListRef}
+        data={productData}
+        renderItem={renderItem}
+        keyExtractor={item => item.id}
+        showsVerticalScrollIndicator={true}
+        initialNumToRender={1}
+        maxToRenderPerBatch={1}
+        windowSize={1}
+        scrollEventThrottle={16}
+        contentContainerStyle={styles.scrollContent}
+        nestedScrollEnabled={true}
+      />
 
-        {/* Tiêu đề sản phẩm */}
-        <View style={[styles.header, { paddingTop: 20 }]}>
-          <Text style={styles.title}>
-            {product?.title || 'Dimoo Space Series - Package #8'}
-          </Text>
-          <Text style={styles.subTitle}>
-            {product?.campaign || 'MILESTONE CAMPAIGN'}
-          </Text>
-          <Text style={styles.endTime}>Ends in: 5 days, 12 hours</Text>
-        </View>
+      {/* Thanh bên phải hiển thị vị trí cuộn */}
+      <View style={styles.scrollIndicator} />
 
-        {/* Giá sản phẩm */}
-        <View style={styles.priceContainer}>
-          <Text style={styles.currentPrice}>
-            {product?.price || '$85.50'}
-          </Text>
-          <Text style={styles.discountLabel}>(10% off)</Text>
-          <Text style={styles.originalPrice}>
-            {product?.originalPrice || '$95.00'}
-          </Text>
-        </View>
-
-        {/* Trạng thái và milestone */}
-        <Text style={styles.status}>Status: 0/8 boxes sold</Text>
-
-        {/* Milestone discount tiers */}
-        <View style={styles.discountTiers}>
-          <Text style={styles.tierTitle}>Milestone Discount Tiers</Text>
-          <Text style={styles.tierItem}>
-            • Standard (1-4 items) - Regular Price ($95.00)
-          </Text>
-          <Text style={styles.tierItem}>
-            • Bronze (5-9 items) - 10% off ($85.50)
-            <Text style={{ color: 'orange' }}> - EXCLUSIVE SAVE $9.2</Text>
-          </Text>
-          <Text style={styles.tierItem}>
-            • Silver (10-19 items) - 15% off ($80.75)
-          </Text>
-          <Text style={styles.tierItem}>
-            • Gold (20+ items) - 20% off ($76.00)
-          </Text>
-        </View>
-
-        {/* Chọn loại sản phẩm (Box / Package) */}
-        <View style={styles.typeSelectionContainer}>
-          <Text style={styles.typeSelectionLabel}>Type:</Text>
-          <View style={styles.typeOptions}>
-            {/* Option Box */}
-            <TouchableOpacity
-              style={[
-                styles.typeOption,
-                selectedType === 'Box' && styles.typeOptionActive
-              ]}
-              onPress={() => setSelectedType('Box')}
-            >
-              <Text
-                style={[
-                  styles.typeOptionText,
-                  selectedType === 'Box' && styles.typeOptionTextActive
-                ]}
-              >
-                Box
-              </Text>
-            </TouchableOpacity>
-            {/* Option Package */}
-            <TouchableOpacity
-              style={[
-                styles.typeOption,
-                selectedType === 'Package' && styles.typeOptionActive
-              ]}
-              onPress={() => setSelectedType('Package')}
-            >
-              <Text
-                style={[
-                  styles.typeOptionText,
-                  selectedType === 'Package' && styles.typeOptionTextActive
-                ]}
-              >
-                Package
-              </Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-
-        {/* Chọn số lượng (chỉ cho chỉnh khi đã chọn type) */}
-        <View style={styles.quantityContainer}>
-          <Text style={styles.label}>Quantity:</Text>
-          <View style={styles.quantityControl}>
-            <TouchableOpacity
-              style={[
-                styles.btnQty,
-                { opacity: selectedType ? 1 : 0.5 }
-              ]}
-              onPress={selectedType ? handleDecrement : null}
-              disabled={!selectedType}
-            >
-              <Text style={styles.btnText}>-</Text>
-            </TouchableOpacity>
-            <Text style={styles.qtyValue}>{quantity}</Text>
-            <TouchableOpacity
-              style={[
-                styles.btnQty,
-                { opacity: selectedType ? 1 : 0.5 }
-              ]}
-              onPress={selectedType ? handleIncrement : null}
-              disabled={!selectedType}
-            >
-              <Text style={styles.btnText}>+</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-
-        {/* Thông tin chi tiết khác */}
-        <View style={styles.infoBox}>
-          <Text style={styles.infoText}>• 50% deposit required ($4.25 per piece)</Text>
-          <Text style={styles.infoText}>• Price locked once 50% deposit is guaranteed</Text>
-          <Text style={styles.infoText}>• Full payment is due within 14 days after campaign ends</Text>
-          <Text style={styles.infoText}>• Series contains: 6 figures + 1 secret chase</Text>
-        </View>
-
-        {/* Nút thêm vào giỏ hàng */}
-        <TouchableOpacity style={styles.addButton} onPress={handleAddToCart}>
-          <Text style={styles.addButtonText}>ADD TO CART</Text>
-        </TouchableOpacity>
-
-        {/* Nút mua ngay */}
-        <TouchableOpacity style={styles.buyNowButton} onPress={handleBuyNow}>
-          <Text style={styles.buyNowButtonText}>PRE-ORDER NOW</Text>
-        </TouchableOpacity>
-      </ScrollView>
-
-      {/* Thông báo khi thêm vào giỏ hàng thành công */}
-      {showNotification && (
-        <View style={styles.notification}>
-          <Text style={styles.notificationText}>Added to cart successfully!</Text>
-        </View>
-      )}
+      {/* Nút thêm vào giỏ hàng */}
+      <TouchableOpacity style={styles.addToCartButton}>
+        <Ionicons name="cart-outline" size={24} color="white" />
+        <Text style={styles.addToCartText}>Thêm vào giỏ hàng</Text>
+      </TouchableOpacity>
     </View>
   );
 };
 
-export default ProductDetailScreen;
-
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fafafa',
-    padding: 15,
+    backgroundColor: '#f9f9f9',
+  },
+  scrollContent: {
+    paddingBottom: 100, // Tăng padding dưới để tránh bị nút Add to Cart che mất
   },
   backButton: {
     position: 'absolute',
-    top: 40,
-    left: 15,
-    zIndex: 10,
-    backgroundColor: '#fff',
-    borderRadius: 20,
-    padding: 5,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.2,
-    shadowRadius: 2,
-    elevation: 3,
-  },
-  imageContainer: {
-    width: '100%',
-    height: 200,
-    marginBottom: 15,
+    top: Platform.select({ ios: 40, android: 20, web: 20 }),
+    left: 20,
+    zIndex: 10, // Đảm bảo nút hiển thị phía trên cùng
   },
   productImage: {
     width: '100%',
-    height: '100%',
-    borderRadius: 8,
+    height: Platform.select({ web: 400, default: 300 }),
+    resizeMode: 'cover',
   },
-  header: {
-    marginBottom: 10,
+  detailsContainer: {
+    padding: 16,
   },
-  title: {
-    fontSize: 20,
-    fontWeight: '700',
-    color: '#333',
-  },
-  subTitle: {
-    fontSize: 14,
-    color: '#FF9800',
-    marginVertical: 5,
+  productName: {
+    fontSize: 24,
     fontWeight: 'bold',
   },
-  endTime: {
-    fontSize: 13,
-    color: '#757575',
+  infoRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginVertical: 8,
+  },
+  seriesId: {
+    fontSize: 14,
+    color: '#666',
+  },
+  tagsContainer: {
+    flexDirection: 'row',
+  },
+  tag: {
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 4,
+    marginLeft: 4,
+    fontSize: 12,
+  },
+  boxTag: {
+    backgroundColor: '#e3f2fd',
+    color: '#2196f3',
+  },
+  packageTag: {
+    backgroundColor: '#f3e5f5',
+    color: '#9c27b0',
+  },
+  activeTag: {
+    backgroundColor: '#e8f5e9',
+    color: '#4caf50',
   },
   priceContainer: {
     flexDirection: 'row',
-    alignItems: 'baseline',
-    marginVertical: 10,
+    alignItems: 'center',
+    marginVertical: 8,
   },
-  currentPrice: {
-    fontSize: 22,
-    fontWeight: '700',
-    color: '#D32F2F',
-    marginRight: 5,
-  },
-  discountLabel: {
-    fontSize: 14,
-    color: '#D32F2F',
-    marginRight: 8,
+  price: {
+    fontSize: 24,
+    fontWeight: 'bold',
   },
   originalPrice: {
-    fontSize: 14,
-    color: '#757575',
+    fontSize: 16,
+    color: '#999',
     textDecorationLine: 'line-through',
+    marginLeft: 8,
   },
-  status: {
-    fontSize: 14,
-    color: '#333',
-    marginBottom: 10,
+  discountTag: {
+    backgroundColor: '#4caf50',
+    color: 'white',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 12,
+    marginLeft: 8,
   },
-  discountTiers: {
-    backgroundColor: '#fff',
-    padding: 10,
-    borderRadius: 8,
-    marginBottom: 15,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
-    elevation: 2,
+  campaignSection: {
+    marginVertical: 16,
   },
-  tierTitle: {
-    fontSize: 16,
-    fontWeight: '600',
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
     marginBottom: 8,
-    color: '#333',
   },
-  tierItem: {
-    fontSize: 14,
-    marginBottom: 5,
-    color: '#555',
+  timelineContainer: {
+    marginBottom: 16,
   },
-  /* Bắt đầu phần chọn Type */
-  typeSelectionContainer: {
-    marginBottom: 15,
-    backgroundColor: '#fff',
-    padding: 10,
-    borderRadius: 8,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
-    elevation: 2,
+  timelineDot: {
+    width: 12,
+    height: 12,
+    borderRadius: 6,
+    backgroundColor: '#4caf50',
+    marginBottom: 4,
   },
-  typeSelectionLabel: {
-    fontSize: 16,
-    marginBottom: 8,
-    fontWeight: '600',
-    color: '#333',
+  timelineLine: {
+    width: 2,
+    height: 40,
+    backgroundColor: '#ccc',
+    marginLeft: 5,
+    marginBottom: 4,
   },
-  typeOptions: {
+  tierInfo: {
     flexDirection: 'row',
-    justifyContent: 'flex-start',
+    justifyContent: 'space-between',
+    marginBottom: 4,
   },
-  typeOption: {
-    backgroundColor: '#e0e0e0',
-    borderRadius: 8,
-    paddingVertical: 10,
-    paddingHorizontal: 20,
-    marginRight: 10,
-  },
-  typeOptionActive: {
-    backgroundColor: '#FF9800', // màu sáng hơn để nổi bật khi chọn
-  },
-  typeOptionText: {
+  description: {
     fontSize: 14,
-    color: '#333',
+    color: '#666',
+    lineHeight: 20,
+    marginBottom: 12,
   },
-  typeOptionTextActive: {
-    color: '#fff',
-    fontWeight: '700',
+  optionContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginVertical: 16,
   },
-  /* Kết thúc phần chọn Type */
+  optionButton: {
+    flex: 1,
+    padding: 12,
+    borderWidth: 1,
+    borderColor: '#ccc',
+    borderRadius: 4,
+    alignItems: 'center',
+    marginHorizontal: 4,
+  },
+  selectedOption: {
+    borderColor: '#2196f3',
+    backgroundColor: '#e3f2fd',
+  },
   quantityContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 15,
+    justifyContent: 'space-between',
+    marginVertical: 16,
   },
-  label: {
+  quantityLabel: {
     fontSize: 16,
-    marginRight: 10,
-    color: '#333',
+    fontWeight: 'bold',
   },
-  quantityControl: {
+  quantitySelector: {
     flexDirection: 'row',
     alignItems: 'center',
   },
-  btnQty: {
-    width: 40,
-    height: 40,
-    borderRadius: 4,
-    backgroundColor: '#e0e0e0',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginHorizontal: 5,
+  quantityText: {
+    fontSize: 16,
+    marginHorizontal: 8,
   },
-  btnText: {
-    fontSize: 20,
-    color: '#333',
-    fontWeight: '600',
-  },
-  qtyValue: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#333',
+  availableText: {
+    fontSize: 12,
+    color: '#666',
   },
   infoBox: {
-    backgroundColor: '#fff',
+    backgroundColor: '#f5f5f5',
+    padding: 15,
+    marginHorizontal: 16,
     borderRadius: 8,
-    padding: 10,
     marginBottom: 20,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
-    elevation: 2,
   },
   infoText: {
     fontSize: 14,
     color: '#555',
-    marginBottom: 5,
+    marginBottom: 6,
   },
-  addButton: {
-    backgroundColor: '#D32F2F',
-    borderRadius: 8,
-    paddingVertical: 15,
-    alignItems: 'center',
-    marginBottom: 15,
+  additionalInfoSection: {
+    padding: 16,
+    backgroundColor: '#fff',
+    marginVertical: 8,
   },
-  addButtonText: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#fff',
+  reviewsSection: {
+    padding: 16,
+    backgroundColor: '#fff',
+    marginBottom: 20,
   },
-  buyNowButton: {
-    backgroundColor: '#FF9800',
-    borderRadius: 8,
-    paddingVertical: 15,
-    alignItems: 'center',
-    marginBottom: 40,
+  reviewItem: {
+    marginBottom: 12,
+    paddingBottom: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: '#eee',
   },
-  buyNowButtonText: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#fff',
-  },
-  notification: {
-    position: 'absolute',
-    bottom: 20,
-    left: '20%',
-    right: '20%',
-    backgroundColor: '#4CAF50',
-    padding: 10,
-    borderRadius: 8,
-    alignItems: 'center',
-  },
-  notificationText: {
-    color: '#fff',
+  reviewAuthor: {
+    fontWeight: 'bold',
     fontSize: 14,
   },
+  reviewRating: {
+    color: '#FFD700',
+    marginVertical: 4,
+  },
+  reviewContent: {
+    fontSize: 14,
+    color: '#666',
+  },
+  bottomPadding: {
+    height: 100, // Tăng khoảng trống dưới cùng
+  },
+  addToCartButton: {
+    position: 'absolute',
+    bottom: 20,
+    left: 16,
+    right: 16,
+    backgroundColor: '#000',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 16,
+    borderRadius: 8,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
+    zIndex: 10, // Đảm bảo nút hiển thị phía trên cùng
+  },
+  addToCartText: {
+    color: 'white',
+    fontSize: 16,
+    marginLeft: 8,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  errorContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  scrollIndicator: {
+    position: 'absolute',
+    right: 2,
+    top: 0,
+    bottom: 0,
+    width: 5,
+    backgroundColor: '#d32f2f',
+    opacity: 0.6,
+    borderRadius: 3,
+  },
 });
+
+export default ProductDetailScreen;
