@@ -113,7 +113,7 @@ const HomeScreen = () => {
     if (blindboxSeries.length > 0 && !isSearching) {
       autoScrollTimer.current = setInterval(() => {
         let nextIndex = currentSlideIndex + 1;
-        if (nextIndex >= blindboxSeries.slice(0, 10).length) {
+        if (nextIndex >= blindboxSeries.slice(0, 5).length) {
           nextIndex = 0;
         }
         
@@ -137,9 +137,8 @@ const HomeScreen = () => {
   const fetchBlindboxSeries = async (searchQuery = null) => {
     try {
       setLoading(true);
-      // Sử dụng facade thay vì gọi API trực tiếp
       const data = await blindboxFacade.getBlindboxSeries(0, 20, ['id', 'asc'], searchQuery);
-      
+      console.log('Fetched Blindbox Series:', JSON.stringify(data.content, null, 2)); // Log dữ liệu
       if (data && data.content) {
         setBlindboxSeries(data.content);
       } else {
@@ -157,12 +156,10 @@ const HomeScreen = () => {
     navigation.navigate('ProductDetailScreen', { productId: product.id });
   };
 
-  // Hàm chỉ lưu giá trị vào state, không thực hiện tìm kiếm
   const handleTextChange = (text) => {
     setSearchText(text);
   };
 
-  // Hàm thực hiện tìm kiếm khi bấm nút
   const handleSearch = () => {
     if (searchText.trim().length > 0) {
       setIsSearching(true);
@@ -178,27 +175,25 @@ const HomeScreen = () => {
     fetchBlindboxSeries();
   };
 
-  const renderSlideItem = ({ item, index }) => (
+  const SlideItem = React.memo(({ item, onPress }) => (
     <View style={styles.slideItemContainer}>
-      <TouchableOpacity 
-        style={styles.slideItem}
-        onPress={() => handleViewProductDetails(item)}
-      >
+      <TouchableOpacity style={styles.slideItem} onPress={onPress}>
         <Image
-          source={{ uri: item.imageUrl || 'https://via.placeholder.com/400x300' }}
+          source={{ uri: item.seriesImageUrl || 'https://via.placeholder.com/400x300' }}
           style={styles.slideImage}
+          resizeMode="contain"
         />
         <View style={styles.slideInfoContainer}>
           <View style={styles.tagContainer}>
-            <Text style={styles.seriesTag}>Series {item.seriesNumber}</Text>
+            <Text style={styles.seriesTag}>Series {item.seriesNumber || item.id}</Text>
             <Text style={styles.stockTag}>In Stock</Text>
           </View>
-          <Text style={styles.slideTitle}>Mystery Series {item.seriesNumber}</Text>
+          <Text style={styles.slideTitle}>Mystery Series {item.seriesNumber || item.id}</Text>
           <Text style={styles.slideDescription} numberOfLines={2}>
-            Exciting mystery collection featuring unique collectibles in Series {item.seriesNumber}
+            {item.description || `Exciting mystery collection featuring unique collectibles in Series ${item.seriesNumber || item.id}`}
           </Text>
           <View style={styles.priceContainer}>
-            <Text style={styles.packagePrice}>Package: {item.packagePrice || (item.price * 5.5).toFixed(2)} đ</Text>
+            <Text style={styles.packagePrice}>Package: {item.packagePrice || 'N/A'} đ</Text>
           </View>
           <View style={styles.buttonContainer}>
             <TouchableOpacity style={styles.detailsButton}>
@@ -211,6 +206,10 @@ const HomeScreen = () => {
         </View>
       </TouchableOpacity>
     </View>
+  ));
+
+  const renderSlideItem = ({ item }) => (
+    <SlideItem item={item} onPress={() => handleViewProductDetails(item)} />
   );
 
   const handleOnViewableItemsChanged = useRef(({ viewableItems }) => {
@@ -230,19 +229,20 @@ const HomeScreen = () => {
       onPress={() => handleViewProductDetails(item)}
     >
       <Image
-        source={{ uri: item.imageUrl || 'https://via.placeholder.com/200' }}
+        source={{ uri: item.seriesImageUrl || 'https://via.placeholder.com/200' }}
         style={styles.collectionImage}
+        resizeMode="contain"
       />
       <View style={styles.collectionTagContainer}>
-        <Text style={styles.collectionSeriesTag}>Series {item.seriesNumber}</Text>
+        <Text style={styles.collectionSeriesTag}>Series {item.seriesNumber || item.id}</Text>
         <Text style={styles.collectionStockTag}>In Stock</Text>
       </View>
-      <Text style={styles.collectionTitle}>Mystery Series {item.seriesNumber}</Text>
+      <Text style={styles.collectionTitle}>Mystery Series {item.seriesNumber || item.id}</Text>
       <Text style={styles.collectionDescription} numberOfLines={3}>
-        Exciting mystery collection featuring unique collectibles in Series {item.seriesNumber}
+        {item.description || `Exciting mystery collection featuring unique collectibles in Series ${item.seriesNumber || item.id}`}
       </Text>
       <View style={styles.collectionPriceContainer}>
-        <Text style={styles.collectionPrice}>Price: {item.packagePrice || (item.price * 5.5).toFixed(2)} đ</Text>
+        <Text style={styles.collectionPrice}>Price: {item.packagePrice || 'N/A'} đ</Text>
       </View>
       <TouchableOpacity style={styles.collectionViewDetailsButton}>
         <Text style={styles.collectionViewDetailsText}>View Details</Text>
@@ -257,11 +257,12 @@ const HomeScreen = () => {
       onPress={() => handleViewProductDetails(item)}
     >
       <Image
-        source={{ uri: item.imageUrl || 'https://via.placeholder.com/150' }}
+        source={{ uri: item.seriesImageUrl || 'https://via.placeholder.com/150' }}
         style={styles.aboutBoxImage}
+        resizeMode="contain"
       />
-      <Text style={styles.aboutBoxTitle}>Mystery Series {item.seriesNumber}</Text>
-      <Text style={styles.aboutBoxPrice}>{item.packagePrice || (item.price * 5.5).toFixed(2)} đ</Text>
+      <Text style={styles.aboutBoxTitle}>Mystery Series {item.seriesNumber || item.id}</Text>
+      <Text style={styles.aboutBoxPrice}>{item.packagePrice || 'N/A'} đ</Text>
       <View style={styles.aboutBoxTagContainer}>
         <Text style={styles.aboutBoxStockTag}>In Stock</Text>
       </View>
@@ -343,19 +344,21 @@ const HomeScreen = () => {
         </View>
       )}
 
-      {/* Slider section - First 10 products */}
+      {/* Slider section - First 5 products */}
       <View style={styles.sliderContainer}>
         <FlatList
           ref={flatListRef}
-          data={blindboxSeries.slice(0, 10)}
+          data={blindboxSeries.slice(0, 5)}
           renderItem={renderSlideItem}
-          keyExtractor={(item, index) => `slide-${index}`}
+          keyExtractor={(item) => item.id.toString()}
           horizontal
           pagingEnabled
           showsHorizontalScrollIndicator={false}
           onViewableItemsChanged={handleOnViewableItemsChanged}
           viewabilityConfig={viewabilityConfig}
-          initialScrollIndex={0}
+          initialNumToRender={5}
+          maxToRenderPerBatch={5}
+          windowSize={5}
           getItemLayout={(data, index) => ({
             length: width,
             offset: width * index,
@@ -364,7 +367,7 @@ const HomeScreen = () => {
           contentContainerStyle={styles.sliderContentContainer}
         />
         <View style={styles.paginationContainer}>
-          {blindboxSeries.slice(0, 10).map((_, index) => (
+          {blindboxSeries.slice(0, 5).map((_, index) => (
             <View
               key={index}
               style={[
@@ -447,7 +450,6 @@ const HomeScreen = () => {
 };
 
 const styles = StyleSheet.create({
-  // Tổng thể màn hình Home
   homeContainer: {
     flex: 1,
     backgroundColor: '#f9f9f9',  
@@ -480,8 +482,6 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontWeight: 'bold',
   },
-
-  // Navbar
   navbar: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -530,8 +530,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-
-  // Search result styles
   searchResultHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -551,41 +549,14 @@ const styles = StyleSheet.create({
     color: '#d32f2f',
     fontWeight: 'bold',
   },
-
-  // Sidebar Navigation
-  navItemsWrapper: {
-    flexDirection: 'row',
-    marginVertical: 10,
-  },
-  navItem: {
-    paddingVertical: 8,
-    paddingHorizontal: 15,
-    marginRight: 10,
-    backgroundColor: '#fff',
-    borderRadius: 20,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.07,
-    shadowRadius: 2,
-    elevation: 2,
-  },
-  navItemText: {
-    fontSize: 14,
-    color: '#333',
-    fontWeight: '500',
-  },
-
-  // Slider Section - Đã cập nhật để sửa lỗi tràn
   sliderContainer: {
     height: 450,
     marginVertical: 10,
     width: '100%',
   },
-  sliderContentContainer: {
-    // Đã xóa paddingRight để sửa lỗi tràn
-  },
+  sliderContentContainer: {},
   slideItemContainer: {
-    width: Dimensions.get('window').width - 20, // Trừ đi padding của container cha
+    width: Dimensions.get('window').width - 20,
     paddingHorizontal: 10,
   },
   slideItem: {
@@ -602,11 +573,10 @@ const styles = StyleSheet.create({
   slideImage: {
     width: '100%',
     height: 200,
-    resizeMode: 'cover',
   },
   slideInfoContainer: {
     padding: 15,
-    flex: 1, // Make sure this container uses all available space
+    flex: 1,
   },
   tagContainer: {
     flexDirection: 'row',
@@ -651,7 +621,7 @@ const styles = StyleSheet.create({
   buttonContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginTop: 'auto', // Push to bottom of container
+    marginTop: 'auto',
   },
   detailsButton: {
     backgroundColor: '#fff',
@@ -692,8 +662,6 @@ const styles = StyleSheet.create({
     borderRadius: 4,
     marginHorizontal: 4,
   },
-
-  // Featured Collections Section
   sectionContainer: {
     marginVertical: 20,
   },
@@ -739,7 +707,6 @@ const styles = StyleSheet.create({
   collectionImage: {
     width: '100%',
     height: 150,
-    resizeMode: 'cover',
   },
   collectionTagContainer: {
     flexDirection: 'row',
@@ -800,8 +767,6 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     fontSize: 12,
   },
-
-  // About Our Blind Boxes Section
   aboutSectionContainer: {
     marginVertical: 20,
     backgroundColor: '#fff',
@@ -882,8 +847,6 @@ const styles = StyleSheet.create({
     paddingVertical: 2,
     borderRadius: 4,
   },
-
-  // Collection Guide Section
   guideContainer: {
     marginVertical: 20,
     backgroundColor: '#f5f5f5',
@@ -946,8 +909,6 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     fontSize: 16,
   },
-
-  // Tab bar style
   tabBarStyle: {
     backgroundColor: '#ffffff',
     borderTopWidth: 1,

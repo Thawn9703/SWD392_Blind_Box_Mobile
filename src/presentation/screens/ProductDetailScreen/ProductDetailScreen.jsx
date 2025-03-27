@@ -1,5 +1,14 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { View, Text, Image, FlatList, TouchableOpacity, StyleSheet, Platform, Dimensions } from 'react-native';
+import { 
+  View, 
+  Text, 
+  Image, 
+  FlatList, 
+  TouchableOpacity, 
+  StyleSheet, 
+  Platform, 
+  Dimensions 
+} from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import blindboxFacade from '@domain/facades/blindboxFacade';
@@ -15,8 +24,9 @@ const ProductDetailScreen = () => {
   const [error, setError] = useState(null);
   const [quantity, setQuantity] = useState(1);
   const [isSingleBoxSelected, setIsSingleBoxSelected] = useState(true);
-  const flatListRef = useRef(null);
-  
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const imageFlatListRef = useRef(null);
+
   useEffect(() => {
     const fetchProductDetails = async () => {
       try {
@@ -58,20 +68,62 @@ const ProductDetailScreen = () => {
   const discountPercent = hasCampaign ? product.activeCampaign.campaignTiers[0].discountPercent : 0;
   const discountedPrice = hasCampaign ? price * (1 - discountPercent / 100) : price;
 
-  // Tạo một mảng duy nhất để sử dụng trong FlatList
+  // Tạo một mảng duy nhất để sử dụng trong FlatList chính
   const productData = [{ 
     id: 'product-details',
     product: product
   }];
-  
+
+  // Hàm render ảnh trong FlatList ảnh
+  const renderImageItem = ({ item }) => (
+    <Image
+      source={{ uri: item || 'https://via.placeholder.com/400' }}
+      style={styles.productImage}
+      resizeMode="cover"
+    />
+  );
+
+  // Xử lý khi ảnh thay đổi
+  const handleImageScroll = (event) => {
+    const contentOffsetX = event.nativeEvent.contentOffset.x;
+    const index = Math.round(contentOffsetX / width);
+    setCurrentImageIndex(index);
+  };
+
   const renderItem = ({ item }) => {
     return (
       <View>
-        {/* Hình ảnh sản phẩm */}
-        <Image
-          source={{ uri: product.seriesImageUrls[0] || 'https://via.placeholder.com/400' }}
-          style={styles.productImage}
-        />
+        {/* Phần hiển thị nhiều ảnh */}
+        <View style={styles.imageContainer}>
+          <FlatList
+            ref={imageFlatListRef}
+            data={product.seriesImageUrls}
+            renderItem={renderImageItem}
+            keyExtractor={(item, index) => `image-${index}`}
+            horizontal
+            pagingEnabled
+            showsHorizontalScrollIndicator={false}
+            onScroll={handleImageScroll}
+            scrollEventThrottle={16}
+            getItemLayout={(data, index) => ({
+              length: width,
+              offset: width * index,
+              index,
+            })}
+          />
+          {/* Pagination dots */}
+          <View style={styles.paginationContainer}>
+            {product.seriesImageUrls.map((_, index) => (
+              <View
+                key={index}
+                style={[
+                  styles.paginationDot,
+                  { backgroundColor: index === currentImageIndex ? '#d32f2f' : '#ccc' }
+                ]}
+              />
+            ))}
+          </View>
+        </View>
 
         <View style={styles.detailsContainer}>
           {/* Tên sản phẩm */}
@@ -171,7 +223,7 @@ const ProductDetailScreen = () => {
           <Text style={styles.infoText}>• Free shipping on orders over 500.000 VND</Text>
         </View>
 
-        {/* Thêm nội dung lặp lại để đảm bảo có thể cuộn */}
+        {/* Thêm nội dung bổ sung */}
         <View style={styles.additionalInfoSection}>
           <Text style={styles.sectionTitle}>Thông tin bổ sung</Text>
           <Text style={styles.description}>
@@ -184,7 +236,7 @@ const ProductDetailScreen = () => {
           </Text>
         </View>
 
-        {/* Thêm phần đánh giá giả để tăng chiều cao nội dung */}
+        {/* Đánh giá giả */}
         <View style={styles.reviewsSection}>
           <Text style={styles.sectionTitle}>Đánh giá từ khách hàng</Text>
           <View style={styles.reviewItem}>
@@ -203,7 +255,7 @@ const ProductDetailScreen = () => {
           </View>
         </View>
 
-        {/* Chú ý: thêm padding để tránh bị che bởi nút thêm vào giỏ hàng */}
+        {/* Padding dưới cùng */}
         <View style={styles.bottomPadding} />
       </View>
     );
@@ -219,9 +271,8 @@ const ProductDetailScreen = () => {
         <Ionicons name="arrow-back" size={24} color="black" />
       </TouchableOpacity>
 
-      {/* Thay thế ScrollView bằng FlatList để có hiệu ứng cuộn tốt hơn */}
+      {/* FlatList chính */}
       <FlatList
-        ref={flatListRef}
         data={productData}
         renderItem={renderItem}
         keyExtractor={item => item.id}
@@ -234,7 +285,7 @@ const ProductDetailScreen = () => {
         nestedScrollEnabled={true}
       />
 
-      {/* Thanh bên phải hiển thị vị trí cuộn */}
+      {/* Thanh cuộn bên phải */}
       <View style={styles.scrollIndicator} />
 
       {/* Nút thêm vào giỏ hàng */}
@@ -252,18 +303,35 @@ const styles = StyleSheet.create({
     backgroundColor: '#f9f9f9',
   },
   scrollContent: {
-    paddingBottom: 100, // Tăng padding dưới để tránh bị nút Add to Cart che mất
+    paddingBottom: 100,
   },
   backButton: {
     position: 'absolute',
     top: Platform.select({ ios: 40, android: 20, web: 20 }),
     left: 20,
-    zIndex: 10, // Đảm bảo nút hiển thị phía trên cùng
+    zIndex: 10,
+  },
+  imageContainer: {
+    position: 'relative',
   },
   productImage: {
-    width: '100%',
+    width: width,
     height: Platform.select({ web: 400, default: 300 }),
-    resizeMode: 'cover',
+  },
+  paginationContainer: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    position: 'absolute',
+    bottom: 10,
+    left: 0,
+    right: 0,
+  },
+  paginationDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    marginHorizontal: 4,
   },
   detailsContainer: {
     padding: 16,
@@ -443,7 +511,7 @@ const styles = StyleSheet.create({
     color: '#666',
   },
   bottomPadding: {
-    height: 100, // Tăng khoảng trống dưới cùng
+    height: 100,
   },
   addToCartButton: {
     position: 'absolute',
@@ -461,7 +529,7 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.25,
     shadowRadius: 3.84,
     elevation: 5,
-    zIndex: 10, // Đảm bảo nút hiển thị phía trên cùng
+    zIndex: 10,
   },
   addToCartText: {
     color: 'white',
