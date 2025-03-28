@@ -25,15 +25,35 @@ const ProductDetailScreen = () => {
   const [quantity, setQuantity] = useState(1);
   const [isSingleBoxSelected, setIsSingleBoxSelected] = useState(true);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const [activeTab, setActiveTab] = useState('Product Details');
+  const [customerPurchaseCount, setCustomerPurchaseCount] = useState(0);
   const imageFlatListRef = useRef(null);
+
+  // Mock customer ID (replace with actual customer ID from auth context)
+  const customerId = 'mock-customer-id';
 
   useEffect(() => {
     const fetchProductDetails = async () => {
       try {
         const data = await blindboxFacade.getBlindboxSeriesById(productId);
+        console.log('Fetched product data:', data);
+
+        // Fetch customer's purchase history
+        const purchaseCount = await blindboxFacade.getCustomerPurchaseCount(productId, customerId);
+        setCustomerPurchaseCount(purchaseCount);
+
+        // Update tier currentCount with customer's purchase history
+        if (data.activeCampaign && data.activeCampaign.campaignTiers) {
+          data.activeCampaign.campaignTiers = data.activeCampaign.campaignTiers.map(tier => ({
+            ...tier,
+            currentCount: (tier.currentCount || 0) + purchaseCount,
+          }));
+        }
+
         setProduct(data);
         setLoading(false);
       } catch (err) {
+        console.error('Error fetching product details:', err);
         setError('Không thể tải chi tiết sản phẩm');
         setLoading(false);
       }
@@ -60,21 +80,38 @@ const ProductDetailScreen = () => {
     );
   }
 
-  const hasCampaign = product.activeCampaign && product.activeCampaign.isActive;
-  const availableUnits = isSingleBoxSelected
-    ? product.availableBoxUnits
-    : product.availablePackageUnits;
+  if (!product) {
+    return (
+      <View style={styles.errorContainer}>
+        <Text>Không tìm thấy sản phẩm</Text>
+        <TouchableOpacity onPress={() => navigation.goBack()}>
+          <Text>Quay lại</Text>
+        </TouchableOpacity>
+      </View>
+    );
+  }
+
+  const hasCampaign = product.activeCampaign && product.activeCampaign.active;
+  const campaignType = hasCampaign && product.activeCampaign.campaignType 
+    ? product.activeCampaign.campaignType.toUpperCase() 
+    : null;
+  const availableUnits = isSingleBoxSelected ? product.availableBoxUnits : product.availablePackageUnits;
   const price = isSingleBoxSelected ? product.boxPrice : product.packagePrice;
-  const discountPercent = hasCampaign ? product.activeCampaign.campaignTiers[0].discountPercent : 0;
-  const discountedPrice = hasCampaign ? price * (1 - discountPercent / 100) : price;
 
-  // Tạo một mảng duy nhất để sử dụng trong FlatList chính
-  const productData = [{ 
-    id: 'product-details',
-    product: product
-  }];
+  // Determine the active tier and discount
+  let discountPercent = 0;
+  let activeTier = null;
+  if (hasCampaign && product.activeCampaign.campaignTiers) {
+    activeTier = product.activeCampaign.campaignTiers.find(tier => tier.tierStatus === 'PROCESSING') || 
+                 product.activeCampaign.campaignTiers[0];
+    discountPercent = activeTier ? activeTier.discountPercent : 0;
+  }
+  const discountedPrice = price * (1 - discountPercent / 100);
+  const deposit = campaignType === 'GROUP' ? discountedPrice * 0.5 : 0;
+  const remainingBalance = campaignType === 'GROUP' ? discountedPrice - deposit : 0;
 
-  // Hàm render ảnh trong FlatList ảnh
+  const productData = [{ id: 'product-details', product: product }];
+
   const renderImageItem = ({ item }) => (
     <Image
       source={{ uri: item || 'https://via.placeholder.com/400' }}
@@ -83,187 +120,439 @@ const ProductDetailScreen = () => {
     />
   );
 
-  // Xử lý khi ảnh thay đổi
   const handleImageScroll = (event) => {
     const contentOffsetX = event.nativeEvent.contentOffset.x;
     const index = Math.round(contentOffsetX / width);
     setCurrentImageIndex(index);
   };
 
-  const renderItem = ({ item }) => {
+  const renderHeader = () => {
+    if (!hasCampaign || !campaignType) {
+      return (
+        <View style={styles.headerContainer}>
+          <Text style={styles.campaignType}>No Active Campaign</Text>
+        </View>
+      );
+    }
+
     return (
-      <View>
-        {/* Phần hiển thị nhiều ảnh */}
-        <View style={styles.imageContainer}>
-          <FlatList
-            ref={imageFlatListRef}
-            data={product.seriesImageUrls}
-            renderItem={renderImageItem}
-            keyExtractor={(item, index) => `image-${index}`}
-            horizontal
-            pagingEnabled
-            showsHorizontalScrollIndicator={false}
-            onScroll={handleImageScroll}
-            scrollEventThrottle={16}
-            getItemLayout={(data, index) => ({
-              length: width,
-              offset: width * index,
-              index,
-            })}
-          />
-          {/* Pagination dots */}
-          <View style={styles.paginationContainer}>
-            {product.seriesImageUrls.map((_, index) => (
-              <View
-                key={index}
-                style={[
-                  styles.paginationDot,
-                  { backgroundColor: index === currentImageIndex ? '#d32f2f' : '#ccc' }
-                ]}
-              />
-            ))}
-          </View>
-        </View>
-
-        <View style={styles.detailsContainer}>
-          {/* Tên sản phẩm */}
-          <Text style={styles.productName}>{product.seriesName}</Text>
-
-          {/* Thông tin availability */}
-          <View style={styles.infoRow}>
-            <Text style={styles.seriesId}>Series ID: {product.id}</Text>
-            <View style={styles.tagsContainer}>
-              <Text style={[styles.tag, styles.boxTag]}>BOXES: {product.availableBoxUnits}</Text>
-              <Text style={[styles.tag, styles.packageTag]}>PACKAGES: {product.availablePackageUnits}</Text>
-              <Text style={[styles.tag, styles.activeTag]}>Active</Text>
-            </View>
-          </View>
-
-          {/* Giá sản phẩm */}
-          <View style={styles.priceContainer}>
-            <Text style={styles.price}>
-              {discountedPrice.toLocaleString('vi-VN', { style: 'currency', currency: 'VND' })}
-            </Text>
-            {hasCampaign && (
-              <>
-                <Text style={styles.originalPrice}>
-                  {price.toLocaleString('vi-VN', { style: 'currency', currency: 'VND' })}
-                </Text>
-                <Text style={styles.discountTag}>-{discountPercent}%</Text>
-              </>
-            )}
-          </View>
-
-          {/* Phần campaign */}
-          {hasCampaign && (
-            <View style={styles.campaignSection}>
-              <Text style={styles.sectionTitle}>Chi tiết Campaign</Text>
-              <View style={styles.timelineContainer}>
-                <View style={styles.timelineDot} />
-                <Text>Bắt đầu: {new Date(product.activeCampaign.startCampaignTime).toLocaleDateString()}</Text>
-                <View style={styles.timelineLine} />
-                <View style={styles.timelineDot} />
-                <Text>Giai đoạn hiện tại</Text>
-                <View style={styles.timelineLine} />
-                <View style={styles.timelineDot} />
-                <Text>Kết thúc: {new Date(product.activeCampaign.endCampaignTime).toLocaleDateString()}</Text>
-              </View>
-              {product.activeCampaign.campaignTiers.map((tier, index) => (
-                <View key={index} style={styles.tierInfo}>
-                  <Text>{tier.alias}: Giảm {tier.discountPercent}%</Text>
-                  <Text>{tier.currentCount}/{tier.thresholdQuantity} đơn vị</Text>
-                </View>
-              ))}
-            </View>
-          )}
-
-          {/* Mô tả */}
-          <Text style={styles.sectionTitle}>Mô tả</Text>
-          <Text style={styles.description}>{product.description || 'Không có mô tả'}</Text>
-
-          {/* Tùy chọn mua hàng */}
-          <View style={styles.optionContainer}>
-            <TouchableOpacity
-              style={[styles.optionButton, isSingleBoxSelected && styles.selectedOption]}
-              onPress={() => setIsSingleBoxSelected(true)}
-            >
-              <Text>Lẻ ({product.boxPrice.toLocaleString('vi-VN', { style: 'currency', currency: 'VND' })})</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[styles.optionButton, !isSingleBoxSelected && styles.selectedOption]}
-              onPress={() => setIsSingleBoxSelected(false)}
-            >
-              <Text>Gói ({product.packagePrice.toLocaleString('vi-VN', { style: 'currency', currency: 'VND' })})</Text>
-            </TouchableOpacity>
-          </View>
-
-          {/* Số lượng */}
-          <View style={styles.quantityContainer}>
-            <Text style={styles.quantityLabel}>Số lượng:</Text>
-            <View style={styles.quantitySelector}>
-              <TouchableOpacity onPress={() => quantity > 1 && setQuantity(quantity - 1)}>
-                <Ionicons name="remove-circle-outline" size={24} />
-              </TouchableOpacity>
-              <Text style={styles.quantityText}>{quantity}</Text>
-              <TouchableOpacity onPress={() => quantity < availableUnits && setQuantity(quantity + 1)}>
-                <Ionicons name="add-circle-outline" size={24} />
-              </TouchableOpacity>
-            </View>
-            <Text style={styles.availableText}>
-              {availableUnits} {isSingleBoxSelected ? 'hộp' : 'gói'} còn lại
-            </Text>
-          </View>
-        </View>
-
-        {/* Thêm thông tin khác */}
-        <View style={styles.infoBox}>
-          <Text style={styles.infoText}>• 50% deposit required for pre-orders</Text>
-          <Text style={styles.infoText}>• Price locked once deposit is paid</Text>
-          <Text style={styles.infoText}>• Full payment is due within 14 days after campaign ends</Text>
-          <Text style={styles.infoText}>• Free shipping on orders over 500.000 VND</Text>
-        </View>
-
-        {/* Thêm nội dung bổ sung */}
-        <View style={styles.additionalInfoSection}>
-          <Text style={styles.sectionTitle}>Thông tin bổ sung</Text>
-          <Text style={styles.description}>
-            Sản phẩm này là một phần của bộ sưu tập đặc biệt. Mỗi hộp chứa một nhân vật ngẫu nhiên
-            từ bộ sưu tập. Tìm kiếm các nhân vật hiếm với tỷ lệ xuất hiện thấp!
+      <View style={styles.headerContainer}>
+        <Text style={styles.campaignType}>
+          {campaignType} CAMPAIGN
+          <TouchableOpacity style={styles.infoIcon}>
+            <Ionicons name="information-circle-outline" size={16} color="#000" />
+          </TouchableOpacity>
+        </Text>
+        <Text style={styles.campaignInfo}>
+          {campaignType === 'MILESTONE'
+            ? 'Purchase now with instant shipping. Price depends on current campaign tier.'
+            : 'Preorder now with 50% deposit. Final price depends on tier reached when campaign ends.'}
+        </Text>
+        <Text style={styles.campaignEnd}>
+          Campaign ends: {new Date(product.activeCampaign.endCampaignTime).toLocaleDateString()} (in a month)
+        </Text>
+        <View style={styles.headerButtonContainer}>
+          <Text style={styles.headerButtonText}>
+            {campaignType === 'MILESTONE' ? 'In Stock & Ready to Ship' : '50% Deposit Required'}
           </Text>
-          <Text style={styles.description}>
-            Bạn có thể mua lẻ từng hộp hoặc mua theo gói để tiết kiệm chi phí. Khi mua theo gói, bạn
-            sẽ nhận được nhiều hộp với giá ưu đãi so với mua lẻ.
-          </Text>
-        </View>
-
-        {/* Đánh giá giả */}
-        <View style={styles.reviewsSection}>
-          <Text style={styles.sectionTitle}>Đánh giá từ khách hàng</Text>
-          <View style={styles.reviewItem}>
-            <Text style={styles.reviewAuthor}>Nguyễn Văn A</Text>
-            <Text style={styles.reviewRating}>★★★★★</Text>
-            <Text style={styles.reviewContent}>
-              Sản phẩm tuyệt vời! Tôi đã sưu tầm được gần đủ bộ và rất hài lòng với chất lượng.
+          <TouchableOpacity style={styles.headerButton}>
+            <Text style={styles.headerButtonLabel}>
+              {campaignType === 'MILESTONE' ? 'Buy Now' : 'Learn More'}
             </Text>
-          </View>
-          <View style={styles.reviewItem}>
-            <Text style={styles.reviewAuthor}>Trần Thị B</Text>
-            <Text style={styles.reviewRating}>★★★★☆</Text>
-            <Text style={styles.reviewContent}>
-              Đóng gói cẩn thận, giao hàng nhanh. Sản phẩm đúng như mô tả.
-            </Text>
-          </View>
+          </TouchableOpacity>
         </View>
-
-        {/* Padding dưới cùng */}
-        <View style={styles.bottomPadding} />
       </View>
     );
   };
 
+  const renderCampaignTiers = () => {
+    if (!hasCampaign || !product.activeCampaign.campaignTiers) return null;
+
+    const { campaignTiers } = product.activeCampaign;
+    return (
+      <View style={styles.tierSection}>
+        <Text style={styles.sectionTitle}>Campaign Tiers</Text>
+        {campaignTiers.map((tier, index) => (
+          <View key={index} style={styles.tierContainer}>
+            <View style={styles.tierHeader}>
+              <Text style={styles.tierTitle}>
+                {tier.tierStatus === 'PROCESSING' ? '•' : '◦'} Tier {tier.tierOrder}: {tier.tierStatus}
+              </Text>
+              <Text style={styles.tierDiscount}>{tier.discountPercent}% OFF</Text>
+            </View>
+            <Text style={styles.tierProgress}>
+              {tier.currentCount} / {tier.thresholdQuantity} {campaignType === 'MILESTONE' ? 'units sold' : 'preorders'}
+            </Text>
+            {tier.currentCount < tier.thresholdQuantity && (
+              <Text style={styles.tierRemaining}>
+                Need {tier.thresholdQuantity - tier.currentCount} more
+              </Text>
+            )}
+          </View>
+        ))}
+      </View>
+    );
+  };
+
+  const renderCampaignTimeline = () => {
+    if (!hasCampaign) return null;
+
+    const { startCampaignTime, endCampaignTime } = product.activeCampaign;
+    const paymentDeadline = new Date(endCampaignTime);
+    paymentDeadline.setDate(paymentDeadline.getDate() + 14);
+
+    return (
+      <View style={styles.timelineContainer}>
+        <Text style={styles.sectionTitle}>Campaign Timeline</Text>
+        <View style={styles.timelineItem}>
+          <View style={[styles.timelineDot, { backgroundColor: '#4caf50' }]} />
+          <Text>Campaign Started</Text>
+        </View>
+        <View style={styles.timelineLine} />
+        <View style={styles.timelineItem}>
+          <Text style={styles.timelineText}>Mar 27, 2025</Text>
+        </View>
+        <View style={styles.timelineLine} />
+        <View style={styles.timelineItem}>
+          <View style={[styles.timelineDot, { backgroundColor: '#2196f3' }]} />
+          <Text>Current Stage</Text>
+        </View>
+        <View style={styles.timelineLine} />
+        <View style={styles.timelineItem}>
+          <Text style={styles.timelineText}>Campaign in progress</Text>
+        </View>
+        <View style={styles.timelineLine} />
+        <View style={styles.timelineItem}>
+          <View style={[styles.timelineDot, { backgroundColor: '#ccc' }]} />
+          <Text>Campaign Ends</Text>
+        </View>
+        <View style={styles.timelineLine} />
+        <View style={styles.timelineItem}>
+          <Text style={styles.timelineText}>{new Date(endCampaignTime).toLocaleDateString()}</Text>
+        </View>
+        {campaignType === 'GROUP' && (
+          <>
+            <View style={styles.timelineLine} />
+            <View style={styles.timelineItem}>
+              <View style={[styles.timelineDot, { backgroundColor: '#ff9800' }]} />
+              <Text>Payment Deadline</Text>
+            </View>
+            <View style={styles.timelineLine} />
+            <View style={styles.timelineItem}>
+              <Text style={styles.timelineText}>{paymentDeadline.toLocaleDateString()}</Text>
+            </View>
+            <Text style={styles.warningText}>
+              Must pay remaining balance within 14 days after campaign ends
+            </Text>
+          </>
+        )}
+      </View>
+    );
+  };
+
+  const renderProductDetailsTab = () => (
+    <View>
+      <Text style={styles.productName}>{product.seriesName}</Text>
+      <View style={styles.infoRow}>
+        <Text style={styles.seriesId}>Series ID: {product.id}</Text>
+        <View style={styles.tagsContainer}>
+          <Text style={[styles.tag, styles.boxTag]}>Available Boxes: {product.availableBoxUnits}</Text>
+          <Text style={[styles.tag, styles.packageTag]}>Available Packages: {product.availablePackageUnits}</Text>
+          <Text style={[styles.tag, styles.activeTag]}>Active</Text>
+        </View>
+      </View>
+      {renderCampaignTiers()}
+      <View style={styles.priceContainer}>
+        <Text style={styles.price}>
+          {discountedPrice.toLocaleString('vi-VN', { style: 'currency', currency: 'VND' })}
+        </Text>
+        <Text style={styles.originalPrice}>
+          {price.toLocaleString('vi-VN', { style: 'currency', currency: 'VND' })}
+        </Text>
+        <Text style={styles.discountTag}>-{discountPercent}%</Text>
+      </View>
+      {campaignType === 'GROUP' && (
+        <View style={styles.depositContainer}>
+          <Text style={styles.depositText}>
+            Deposit Required: {deposit.toLocaleString('vi-VN', { style: 'currency', currency: 'VND'})}
+          </Text>
+          <Text style={styles.depositText}>
+            Remaining balance: {remainingBalance.toLocaleString('vi-VN', { style: 'currency', currency: 'VND'})}
+            <TouchableOpacity style={styles.infoIcon}>
+              <Ionicons name="information-circle-outline" size={16} color="#000" />
+            </TouchableOpacity>
+          </Text>
+        </View>
+      )}
+      {renderCampaignTimeline()}
+      <Text style={styles.sectionTitle}>Description</Text>
+      <Text style={styles.description}>{product.description || 'Không có mô tả'}</Text>
+      <View style={styles.optionContainer}>
+        <TouchableOpacity
+          style={[styles.optionButton, isSingleBoxSelected && styles.selectedOption]}
+          onPress={() => setIsSingleBoxSelected(true)}
+        >
+          <Text>Single Box ({product.boxPrice.toLocaleString('vi-VN', { style: 'currency', currency: 'VND'})})</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={[styles.optionButton, !isSingleBoxSelected && styles.selectedOption]}
+          onPress={() => setIsSingleBoxSelected(false)}
+        >
+          <Text>Package ({product.packagePrice.toLocaleString('vi-VN', { style: 'currency', currency: 'VND'})})</Text>
+        </TouchableOpacity>
+      </View>
+      <View style={styles.quantityContainer}>
+        <Text style={styles.quantityLabel}>Quantity:</Text>
+        <View style={styles.quantitySelector}>
+          <TouchableOpacity onPress={() => quantity > 1 && setQuantity(quantity - 1)}>
+            <Ionicons name="remove-circle-outline" size={24} />
+          </TouchableOpacity>
+          <Text style={styles.quantityText}>{quantity}</Text>
+          <TouchableOpacity onPress={() => quantity < availableUnits && setQuantity(quantity + 1)}>
+            <Ionicons name="add-circle-outline" size={24} />
+          </TouchableOpacity>
+        </View>
+        <Text style={styles.availableText}>
+          {availableUnits} {isSingleBoxSelected ? 'boxes' : 'packages'} available
+        </Text>
+      </View>
+    </View>
+  );
+
+  const renderCampaignDetailsTab = () => {
+    if (!hasCampaign || !campaignType) {
+      return (
+        <View>
+          <Text style={styles.sectionTitle}>Campaign Details</Text>
+          <Text style={styles.description}>No active campaign available.</Text>
+        </View>
+      );
+    }
+
+    return (
+      <View>
+        <Text style={styles.sectionTitle}>
+          {campaignType} Campaign Details
+        </Text>
+        <Text style={styles.description}>
+          This is a {campaignType} campaign. {campaignType === 'MILESTONE'
+            ? 'Products are already in stock and will be shipped immediately after purchase. Price depends on the current active tier.'
+            : 'You will be charged a 50% deposit now, and the remaining balance after the campaign ends. Final price will be determined by the tier reached when the campaign ends.'}
+        </Text>
+        <Text style={styles.sectionTitle}>Campaign Rules</Text>
+        {campaignType === 'MILESTONE' ? (
+          <>
+            <Text style={styles.infoText}>• Products are in stock and ready to ship</Text>
+            <Text style={styles.infoText}>• Price is determined by the current active tier</Text>
+            <Text style={styles.infoText}>• As more units are sold, higher tiers with better discounts may be unlocked</Text>
+            <Text style={styles.infoText}>• You pay the price based on the tier active at the time of your purchase</Text>
+          </>
+        ) : (
+          <>
+            <Text style={styles.infoText}>• You will be charged a 50% deposit now, and the remaining balance after the campaign ends</Text>
+            <Text style={styles.infoText}>• Final price will be determined by the tier reached when the campaign ends</Text>
+            <Text style={styles.infoText}>• You must complete the full payment within 14 days after the campaign ends or your deposit will be forfeited</Text>
+            <Text style={styles.infoText}>• You can track all your preorders in your account preorder history</Text>
+          </>
+        )}
+        <Text style={styles.sectionTitle}>Campaign Progress</Text>
+        <Text style={styles.tierProgress}>
+          {activeTier ? activeTier.currentCount : 0} Units {campaignType === 'MILESTONE' ? 'Sold' : 'Preordered'}
+        </Text>
+        {renderCampaignTiers()}
+      </View>
+    );
+  };
+
+  const renderShippingReturnsTab = () => (
+    <View>
+      <Text style={styles.sectionTitle}>Shipping Information</Text>
+      <Text style={styles.description}>
+        All orders are processed within 1-2 business days. Orders placed on weekends or holidays will be processed on the next business day.
+      </Text>
+      {campaignType === 'GROUP' && (
+        <View style={styles.infoBox}>
+          <Text style={styles.infoText}>Preorder Shipping</Text>
+          <Text style={styles.description}>
+            For preorder campaigns, shipping will begin after the campaign ends and all payments are completed. Estimated delivery time will be provided after the campaign ends.
+          </Text>
+        </View>
+      )}
+      <Text style={styles.sectionTitle}>Return Policy</Text>
+      <Text style={styles.description}>
+        We offer a 14-day return policy for unopened items in their original packaging. Please contact our customer service team to initiate a return.
+      </Text>
+      {campaignType === 'GROUP' && (
+        <View style={styles.infoBox}>
+          <Text style={styles.infoText}>Preorder Cancellation Policy</Text>
+          <Text style={styles.description}>
+            Preorders cannot be cancelled after the campaign ends. If you fail to complete the full payment within 14 days after the campaign ends, your deposit will be forfeited.
+          </Text>
+        </View>
+      )}
+    </View>
+  );
+
+  const renderProductSpecification = () => {
+    // Determine the background color for the campaign type tag dynamically
+    const campaignTypeBackgroundColor = campaignType === 'MILESTONE' ? '#4caf50' : campaignType === 'GROUP' ? '#ff9800' : '#ccc';
+
+    return (
+      <View style={styles.specificationContainer}>
+        <Text style={styles.sectionTitle}>Product Specification</Text>
+        <View style={styles.specRow}>
+          <Text style={styles.specLabel}>Series Name:</Text>
+          <Text style={styles.specValue}>{product.seriesName}</Text>
+        </View>
+        <View style={styles.specRow}>
+          <Text style={styles.specLabel}>Series ID:</Text>
+          <Text style={styles.specValue}>{product.id}</Text>
+        </View>
+        <View style={styles.specRow}>
+          <Text style={styles.specLabel}>Box Price:</Text>
+          <Text style={styles.specValue}>{product.boxPrice.toLocaleString('vi-VN', { style: 'currency', currency: 'VND'})}</Text>
+        </View>
+        <View style={styles.specRow}>
+          <Text style={styles.specLabel}>Package Price:</Text>
+          <Text style={styles.specValue}>{product.packagePrice.toLocaleString('vi-VN', { style: 'currency', currency: 'VND'})}</Text>
+        </View>
+        <View style={styles.specRow}>
+          <Text style={styles.specLabel}>Available Box Units:</Text>
+          <Text style={styles.specValue}>{product.availableBoxUnits}</Text>
+        </View>
+        <View style={styles.specRow}>
+          <Text style={styles.specLabel}>Available Package Units:</Text>
+          <Text style={styles.specValue}>{product.availablePackageUnits}</Text>
+        </View>
+        <View style={styles.specRow}>
+          <Text style={styles.specLabel}>Campaign Type:</Text>
+          <Text style={[styles.specValue, styles.campaignTypeTag, { backgroundColor: campaignTypeBackgroundColor }]}>
+            {campaignType || 'N/A'}
+          </Text>
+        </View>
+        <View style={styles.specRow}>
+          <Text style={styles.specLabel}>Campaign Start:</Text>
+          <Text style={styles.specValue}>
+            {hasCampaign ? new Date(product.activeCampaign.startCampaignTime).toLocaleDateString() : 'N/A'}
+          </Text>
+        </View>
+        <View style={styles.specRow}>
+          <Text style={styles.specLabel}>Campaign End:</Text>
+          <Text style={styles.specValue}>
+            {hasCampaign ? new Date(product.activeCampaign.endCampaignTime).toLocaleDateString() : 'N/A'}
+          </Text>
+        </View>
+        <View style={styles.specRow}>
+          <Text style={styles.specLabel}>Status:</Text>
+          <Text style={styles.specValue}>{product.active ? 'Active' : 'Inactive'}</Text>
+        </View>
+        <View style={styles.specRow}>
+          <Text style={styles.specLabel}>Number of Items:</Text>
+          <Text style={styles.specValue}>{product.items?.length || 0}</Text>
+        </View>
+      </View>
+    );
+  };
+
+  const renderTabs = () => (
+    <View style={styles.tabContainer}>
+      {['Product Details', 'Campaign Details', 'Shipping & Returns'].map(tab => (
+        <TouchableOpacity
+          key={tab}
+          style={[styles.tab, activeTab === tab && styles.activeTab]}
+          onPress={() => setActiveTab(tab)}
+        >
+          <Text style={[styles.tabText, activeTab === tab && styles.activeTabText]}>{tab}</Text>
+        </TouchableOpacity>
+      ))}
+    </View>
+  );
+
+  const renderTabContent = () => {
+    switch (activeTab) {
+      case 'Product Details':
+        return renderProductDetailsTab();
+      case 'Campaign Details':
+        return renderCampaignDetailsTab();
+      case 'Shipping & Returns':
+        return renderShippingReturnsTab();
+      default:
+        return renderProductDetailsTab();
+    }
+  };
+
+  const renderActionButton = () => {
+    if (!campaignType) {
+      return (
+        <TouchableOpacity style={styles.addToCartButton}>
+          <Ionicons name="cart-outline" size={24} color="white" />
+          <Text style={styles.addToCartText}>Add to Cart</Text>
+        </TouchableOpacity>
+      );
+    }
+
+    if (campaignType === 'GROUP') {
+      return (
+        <TouchableOpacity
+          style={styles.preOrderButton}
+          onPress={() => navigation.navigate('PaymentScreen', { productId, quantity, isSingleBoxSelected })}
+        >
+          <Ionicons name="wallet-outline" size={24} color="white" />
+          <Text style={styles.preOrderText}>Pre-order with Deposit</Text>
+        </TouchableOpacity>
+      );
+    }
+    return (
+      <TouchableOpacity style={styles.addToCartButton}>
+        <Ionicons name="cart-outline" size={24} color="white" />
+        <Text style={styles.addToCartText}>Add to Cart</Text>
+      </TouchableOpacity>
+    );
+  };
+
+  const renderItem = ({ item }) => (
+    <View>
+      {renderHeader()}
+      <View style={styles.imageContainer}>
+        <FlatList
+          ref={imageFlatListRef}
+          data={product.seriesImageUrls}
+          renderItem={renderImageItem}
+          keyExtractor={(item, index) => `image-${index}`}
+          horizontal
+          pagingEnabled
+          showsHorizontalScrollIndicator={false}
+          onScroll={handleImageScroll}
+          scrollEventThrottle={16}
+          getItemLayout={(data, index) => ({
+            length: width,
+            offset: width * index,
+            index,
+          })}
+        />
+        <View style={styles.paginationContainer}>
+          {product.seriesImageUrls.map((_, index) => (
+            <View
+              key={index}
+              style={[
+                styles.paginationDot,
+                { backgroundColor: index === currentImageIndex ? '#d32f2f' : '#ccc' }
+              ]}
+            />
+          ))}
+        </View>
+      </View>
+      <View style={styles.detailsContainer}>
+        {renderTabs()}
+        {renderTabContent()}
+        {renderProductSpecification()}
+      </View>
+      <View style={styles.bottomPadding} />
+    </View>
+  );
+
   return (
     <View style={{ flex: 1 }}>
-      {/* Nút back */}
       <TouchableOpacity
         onPress={() => navigation.goBack()}
         style={styles.backButton}
@@ -271,7 +560,6 @@ const ProductDetailScreen = () => {
         <Ionicons name="arrow-back" size={24} color="black" />
       </TouchableOpacity>
 
-      {/* FlatList chính */}
       <FlatList
         data={productData}
         renderItem={renderItem}
@@ -285,14 +573,9 @@ const ProductDetailScreen = () => {
         nestedScrollEnabled={true}
       />
 
-      {/* Thanh cuộn bên phải */}
       <View style={styles.scrollIndicator} />
 
-      {/* Nút thêm vào giỏ hàng */}
-      <TouchableOpacity style={styles.addToCartButton}>
-        <Ionicons name="cart-outline" size={24} color="white" />
-        <Text style={styles.addToCartText}>Thêm vào giỏ hàng</Text>
-      </TouchableOpacity>
+      {renderActionButton()}
     </View>
   );
 };
@@ -310,6 +593,46 @@ const styles = StyleSheet.create({
     top: Platform.select({ ios: 40, android: 20, web: 20 }),
     left: 20,
     zIndex: 10,
+  },
+  headerContainer: {
+    backgroundColor: '#f5f5f5',
+    padding: 16,
+  },
+  campaignType: {
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+  infoIcon: {
+    marginLeft: 4,
+  },
+  campaignInfo: {
+    fontSize: 14,
+    color: '#666',
+    marginVertical: 4,
+  },
+  campaignEnd: {
+    fontSize: 12,
+    color: '#666',
+  },
+  headerButtonContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginTop: 8,
+  },
+  headerButtonText: {
+    fontSize: 14,
+    color: '#000',
+  },
+  headerButton: {
+    backgroundColor: '#000',
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    borderRadius: 4,
+  },
+  headerButtonLabel: {
+    color: '#fff',
+    fontSize: 14,
   },
   imageContainer: {
     position: 'relative',
@@ -371,6 +694,38 @@ const styles = StyleSheet.create({
     backgroundColor: '#e8f5e9',
     color: '#4caf50',
   },
+  tierSection: {
+    marginVertical: 16,
+  },
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginBottom: 8,
+  },
+  tierContainer: {
+    marginBottom: 8,
+  },
+  tierHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
+  tierTitle: {
+    fontSize: 14,
+    fontWeight: 'bold',
+  },
+  tierDiscount: {
+    fontSize: 14,
+    color: '#4caf50',
+    fontWeight: 'bold',
+  },
+  tierProgress: {
+    fontSize: 12,
+    color: '#666',
+  },
+  tierRemaining: {
+    fontSize: 12,
+    color: '#d32f2f',
+  },
   priceContainer: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -394,35 +749,41 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     marginLeft: 8,
   },
-  campaignSection: {
-    marginVertical: 16,
+  depositContainer: {
+    marginVertical: 8,
   },
-  sectionTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    marginBottom: 8,
+  depositText: {
+    fontSize: 14,
+    color: '#666',
   },
   timelineContainer: {
-    marginBottom: 16,
+    marginVertical: 16,
+  },
+  timelineItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
   },
   timelineDot: {
     width: 12,
     height: 12,
     borderRadius: 6,
-    backgroundColor: '#4caf50',
-    marginBottom: 4,
+    marginRight: 8,
   },
   timelineLine: {
     width: 2,
     height: 40,
     backgroundColor: '#ccc',
     marginLeft: 5,
-    marginBottom: 4,
+    marginVertical: 4,
   },
-  tierInfo: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 4,
+  timelineText: {
+    fontSize: 12,
+    color: '#666',
+  },
+  warningText: {
+    color: '#d32f2f',
+    fontSize: 12,
+    marginTop: 8,
   },
   description: {
     fontSize: 14,
@@ -470,10 +831,32 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: '#666',
   },
+  tabContainer: {
+    flexDirection: 'row',
+    borderBottomWidth: 1,
+    borderBottomColor: '#ccc',
+    marginVertical: 16,
+  },
+  tab: {
+    flex: 1,
+    paddingVertical: 8,
+    alignItems: 'center',
+  },
+  activeTab: {
+    borderBottomWidth: 2,
+    borderBottomColor: '#2196f3',
+  },
+  tabText: {
+    fontSize: 14,
+    color: '#666',
+  },
+  activeTabText: {
+    color: '#2196f3',
+    fontWeight: 'bold',
+  },
   infoBox: {
     backgroundColor: '#f5f5f5',
     padding: 15,
-    marginHorizontal: 16,
     borderRadius: 8,
     marginBottom: 20,
   },
@@ -481,34 +864,32 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#555',
     marginBottom: 6,
-  },
-  additionalInfoSection: {
-    padding: 16,
-    backgroundColor: '#fff',
-    marginVertical: 8,
-  },
-  reviewsSection: {
-    padding: 16,
-    backgroundColor: '#fff',
-    marginBottom: 20,
-  },
-  reviewItem: {
-    marginBottom: 12,
-    paddingBottom: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: '#eee',
-  },
-  reviewAuthor: {
     fontWeight: 'bold',
-    fontSize: 14,
   },
-  reviewRating: {
-    color: '#FFD700',
-    marginVertical: 4,
+  specificationContainer: {
+    marginVertical: 16,
   },
-  reviewContent: {
+  specRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 8,
+  },
+  specLabel: {
     fontSize: 14,
     color: '#666',
+    flex: 1,
+  },
+  specValue: {
+    fontSize: 14,
+    color: '#000',
+    flex: 1,
+    textAlign: 'right',
+  },
+  campaignTypeTag: {
+    color: '#fff',
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 4,
   },
   bottomPadding: {
     height: 100,
@@ -532,6 +913,29 @@ const styles = StyleSheet.create({
     zIndex: 10,
   },
   addToCartText: {
+    color: 'white',
+    fontSize: 16,
+    marginLeft: 8,
+  },
+  preOrderButton: {
+    position: 'absolute',
+    bottom: 20,
+    left: 16,
+    right: 16,
+    backgroundColor: '#000',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 16,
+    borderRadius: 8,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
+    zIndex: 10,
+  },
+  preOrderText: {
     color: 'white',
     fontSize: 16,
     marginLeft: 8,
